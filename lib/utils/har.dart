@@ -66,13 +66,76 @@ class Har {
       "content": {
         "size": request.response?.body?.length ?? -1, // 响应体大小
         "mimeType": _getContentType(request.response?.headers.contentType), // 响应体类型
-        "text": request.response?.bodyAsString ?? '', // 响应体内容
+        "text": _getResponseText(request.response),
       },
       "redirectURL": '', // 重定向地址
       "headersSize": -1, // 响应头大小
       "bodySize": request.response?.body?.length ?? -1, // 响应体大小
     };
     return har;
+  }
+
+  static Map toHarRequest(HttpRequest request) {
+    return {
+      "startedDateTime": request.requestTime.toUtc().toIso8601String(),
+      "time": -1,
+      "pageref": "ProxyPin",
+      "_id": request.requestId,
+      "_phase": "request",
+      '_app': request.processInfo?.toJson(),
+      "request": {
+        "method": request.method.name,
+        "url": request.requestUrl,
+        "httpVersion": request.protocolVersion,
+        "cookies": [],
+        "headers": _headers(request),
+        "queryString": _getQueryString(request),
+        "postData": _getPostData(request),
+        "headersSize": -1,
+        "bodySize": request.body?.length ?? -1,
+      },
+      "response": null,
+      "cache": {},
+      'timings': {'send': 0, 'wait': -1, 'receive': 0},
+      'serverIPAddress': '',
+    };
+  }
+
+  static Map toHarResponse(HttpRequest request) {
+    return {
+      "startedDateTime": request.requestTime.toUtc().toIso8601String(),
+      "time": request.response?.responseTime.difference(request.requestTime).inMilliseconds ?? -1,
+      "pageref": "ProxyPin",
+      "_id": request.requestId,
+      "_phase": "response",
+      '_app': request.processInfo?.toJson(),
+      "request": {
+        "method": request.method.name,
+        "url": request.requestUrl,
+      },
+      "response": {
+        "status": request.response?.status.code ?? 0,
+        "statusText": request.response?.status.reasonPhrase ?? '',
+        "httpVersion": request.response?.protocolVersion ?? 'HTTP/1.1',
+        "cookies": [],
+        "headers": _headers(request.response),
+        "content": {
+          "size": request.response?.body?.length ?? -1,
+          "mimeType": _getContentType(request.response?.headers.contentType),
+          "text": _getResponseText(request.response),
+        },
+        "redirectURL": '',
+        "headersSize": -1,
+        "bodySize": request.response?.body?.length ?? -1,
+      },
+      "cache": {},
+      'timings': {
+        'send': 0,
+        'wait': request.response?.responseTime.difference(request.requestTime).inMilliseconds ?? -1,
+        'receive': 0,
+      },
+      'serverIPAddress': request.response?.remoteHost ?? '',
+    };
   }
 
   static Future<String> writeJson(List<HttpRequest> list, {String title = ''}) async {
@@ -106,7 +169,12 @@ class Har {
     List<HttpRequest> list = [];
 
     for (var value in lines) {
-      var har = jsonDecode(value.substring(0, value.length - 1));
+      var line = value.trim();
+      if (line.isEmpty) continue;
+      if (line.endsWith(',')) {
+        line = line.substring(0, line.length - 1);
+      }
+      var har = jsonDecode(line);
       var request = toRequest(har);
       list.add(request);
     }
@@ -147,10 +215,22 @@ class Har {
     if (response != null && response['status'] != null) {
       httpResponse = HttpResponse(HttpStatus.newStatus(response['status'], response['statusText']),
           protocolVersion: response['httpVersion']);
-      httpResponse.body = response['content']['text']?.toString().codeUnits;
       List responseHeaders = response['headers'];
       for (var element in responseHeaders) {
         httpResponse.headers.add(element['name'], element['value']);
+      }
+
+      var responseText = response['content']?['text'];
+      if (responseText != null) {
+        if (httpResponse.contentType.isBinary) {
+          try {
+            httpResponse.body = base64Decode(responseText);
+          } catch (e) {
+            httpResponse.body = responseText.toString().codeUnits;
+          }
+        } else {
+          httpResponse.body = responseText.toString().codeUnits;
+        }
       }
     }
 
@@ -193,6 +273,18 @@ class Har {
       "mimeType": request.headers.contentType, // 请求体类型
       if (request.body != null) "text": String.fromCharCodes(request.body!), // 请求体内容
     };
+  }
+
+  static String _getResponseText(HttpResponse? response) {
+    final responseBody = response?.body;
+    if (responseBody == null) {
+      return '';
+    }
+    if (response?.contentType.isBinary == true) {
+      return base64Encode(responseBody);
+    }
+
+    return response?.bodyAsString ?? '';
   }
 
   //获取contentType

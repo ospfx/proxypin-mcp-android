@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:proxypin/ui/component/multi_window_compat.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +21,7 @@ Future<void> _refreshConfig({bool force = false}) async {
   if (force) {
     _refresh = false;
     await RequestCryptoManager.instance.then((manager) => manager.flushConfig());
-    await DesktopMultiWindow.invokeMethod(0, "refreshRequestCrypto");
+    await DesktopMultiWindow.invokeMainWindowMethod("refreshRequestCrypto");
     return;
   }
 
@@ -32,12 +32,12 @@ Future<void> _refreshConfig({bool force = false}) async {
   Future.delayed(const Duration(milliseconds: 1000), () async {
     _refresh = false;
     await RequestCryptoManager.instance.then((manager) => manager.flushConfig());
-    await DesktopMultiWindow.invokeMethod(0, "refreshRequestCrypto");
+    await DesktopMultiWindow.invokeMainWindowMethod("refreshRequestCrypto");
   });
 }
 
 class RequestCryptoPage extends StatefulWidget {
-  final int? windowId;
+  final String? windowId;
   final RequestCryptoManager manager;
 
   const RequestCryptoPage({super.key, this.windowId, required this.manager});
@@ -83,7 +83,7 @@ class _RequestCryptoPageState extends State<RequestCryptoPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isEN = Localizations.localeOf(context).languageCode == 'en';
+    bool isCN = Localizations.localeOf(context).languageCode == 'zh';
     return Scaffold(
         backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
         appBar: AppBar(
@@ -96,7 +96,7 @@ class _RequestCryptoPageState extends State<RequestCryptoPage> {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
                     SizedBox(
-                        width: isEN ? 310 : 225,
+                        width: !isCN ? 310 : 225,
                         child: ListTile(
                             title: Text("${localizations.enable} ${localizations.requestCrypto}"),
                             trailing: SwitchWidget(
@@ -134,17 +134,8 @@ class _RequestCryptoPageState extends State<RequestCryptoPage> {
   }
 
   Future<void> _import() async {
-    String? path;
-    if (Platform.isMacOS) {
-      path = await DesktopMultiWindow.invokeMethod(0, "pickFiles", {
-        "allowedExtensions": ['json']
-      });
-      if (widget.windowId != null) WindowController.fromWindowId(widget.windowId!).show();
-    } else {
-      FilePickerResult? result =
-          await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
-      path = result?.files.single.path;
-    }
+    FilePickerResult? result = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+    final path = result?.files.single.path;
     if (path == null) return;
     try {
       final content = await File(path).readAsString();
@@ -163,7 +154,7 @@ class _RequestCryptoPageState extends State<RequestCryptoPage> {
 
 // Reusable rule list component extracted from _RequestCryptoPageState
 class CryptoRuleList extends StatefulWidget {
-  final int? windowId;
+  final String? windowId;
   final RequestCryptoManager manager;
 
   const CryptoRuleList({
@@ -246,7 +237,7 @@ class _CryptoRuleListState extends State<CryptoRuleList> {
       return InkWell(
         highlightColor: Colors.transparent,
         splashColor: Colors.transparent,
-        hoverColor: primaryColor.withOpacity(0.3),
+        hoverColor: primaryColor.withValues(alpha: 0.3),
         onDoubleTap: () => showEdit(index),
         onSecondaryTapDown: (details) => showMenus(details, index),
         onHover: (hover) {
@@ -272,9 +263,9 @@ class _CryptoRuleListState extends State<CryptoRuleList> {
         },
         child: Container(
           color: selected.contains(index)
-              ? primaryColor.withOpacity(0.6)
+              ? primaryColor.withValues(alpha: 0.6)
               : index.isEven
-                  ? Colors.grey.withOpacity(0.1)
+                  ? Colors.grey.withValues(alpha: 0.1)
                   : null,
           height: 32,
           padding: const EdgeInsets.all(5),
@@ -378,15 +369,8 @@ class _CryptoRuleListState extends State<CryptoRuleList> {
     if (indexes.isEmpty) return;
     indexes.sort();
     final data = indexes.map((i) => manager.rules[i].toJson()).toList();
-    String? path;
-    if (Platform.isMacOS) {
-      path = await DesktopMultiWindow.invokeMethod(0, "saveFile", {"fileName": 'request_crypto.json'});
-      if (widget.windowId != null) WindowController.fromWindowId(widget.windowId!).show();
-    } else {
-      path = await FilePicker.platform.saveFile(fileName: 'request_crypto.json');
-    }
+    String? path = await FilePicker.saveFile(fileName: 'request_crypto.json', bytes: utf8.encode(jsonEncode(data)));
     if (path == null) return;
-    await File(path).writeAsString(jsonEncode(data));
     if (mounted) FlutterToastr.show(localizations.exportSuccess, context);
   }
 
@@ -665,7 +649,7 @@ class _CryptoRuleDialogState extends State<CryptoRuleDialog> {
                         Row(children: [
                           Container(
                             height: 42,
-                            constraints:  const BoxConstraints(minWidth: 92),
+                            constraints: const BoxConstraints(minWidth: 92),
                             padding: const EdgeInsets.symmetric(horizontal: 6),
                             decoration: BoxDecoration(
                               border: Border.all(color: Theme.of(context).dividerColor.withAlpha((0.12 * 255).round())),

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../../storage/path.dart';
 import '../../util/logger.dart';
+import '../../util/url_pattern.dart';
 
 class ReportServerManager {
   static ReportServerManager? _instance;
@@ -96,6 +97,9 @@ class ReportServer {
   /// 压缩方式：none/gzip，默认 none
   final String? compression;
 
+  /// 分离上报：request和response分开上报
+  final bool splitReport;
+
   RegExp _urlReg;
 
   ReportServer({
@@ -104,7 +108,8 @@ class ReportServer {
     required this.serverUrl,
     this.enabled = true,
     this.compression,
-  }) : _urlReg = RegExp(matchUrl.replaceAll("*", ".*").replaceFirst('?', '\\?'));
+    this.splitReport = false,
+  }) : _urlReg = UrlPattern.toRegExp(matchUrl);
 
   bool match(String url) {
     if (enabled) {
@@ -114,7 +119,7 @@ class ReportServer {
   }
 
   void updateUrlReg() {
-    _urlReg = RegExp(matchUrl.replaceAll("*", ".*").replaceFirst('?', '\\?'));
+    _urlReg = UrlPattern.toRegExp(matchUrl);
   }
 
   ReportServer copyWith({
@@ -124,6 +129,7 @@ class ReportServer {
     String? matchUrl,
     String? matchType,
     String? compression,
+    bool? splitReport,
     Map<String, String>? headers,
   }) {
     return ReportServer(
@@ -132,6 +138,7 @@ class ReportServer {
       serverUrl: serverUrl ?? this.serverUrl,
       enabled: enabled ?? this.enabled,
       compression: compression ?? this.compression,
+      splitReport: splitReport ?? this.splitReport,
     );
   }
 
@@ -142,6 +149,7 @@ class ReportServer {
       serverUrl: json['serverUrl'] ?? '',
       enabled: json['enabled'] ?? true,
       compression: (json['compression'] ?? 'none') as String,
+      splitReport: json['splitReport'] ?? false,
     );
   }
 
@@ -152,6 +160,7 @@ class ReportServer {
       'serverUrl': serverUrl,
       'enabled': enabled,
       'compression': compression,
+      'splitReport': splitReport,
     };
   }
 }

@@ -17,14 +17,15 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:desktop_multi_window/desktop_multi_window.dart';
-import 'package:flutter_js/flutter_js.dart';
+import 'package:proxypin/ui/component/multi_window_compat.dart';
+import 'package:proxypin/network/components/manager/environment_manager.dart';
 import 'package:proxypin/network/http/http.dart';
 import 'package:proxypin/network/util/cache.dart';
 import 'package:proxypin/network/util/logger.dart';
+import 'package:proxypin/network/util/url_pattern.dart';
 import 'package:proxypin/network/util/random.dart';
+import 'package:proxypin/storage/path.dart';
 import 'package:proxypin/ui/component/device.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 
 import '../js/script_engine.dart';
@@ -63,7 +64,7 @@ async function onResponse(context, request, response) {
 
   final ExpiringCache<ScriptItem, String> _scriptMap = ExpiringCache<ScriptItem, String>(Duration(minutes: 15));
 
-  static late JavascriptRuntime flutterJs;
+  static late JavaScriptRuntimePool flutterJsPool;
 
   static String? deviceId;
 
@@ -76,7 +77,7 @@ async function onResponse(context, request, response) {
     if (_instance == null) {
       _instance = ScriptManager._();
       await _instance?.reloadScript();
-      flutterJs = await JavaScriptEngine.getJavaScript(consoleLog: consoleLog);
+      flutterJsPool = JavaScriptRuntimePool(size: JavaScriptEngine.defaultRuntimePoolSize, consoleLog: consoleLog);
       deviceId = await DeviceUtils.deviceId();
 
       logger.d('init script manager $deviceId');
@@ -84,7 +85,7 @@ async function onResponse(context, request, response) {
     return _instance!;
   }
 
-  static void registerConsoleLog(int fromWindowId) {
+  static void registerConsoleLog(String fromWindowId) {
     LogHandler logHandler = LogHandler(
         channelId: fromWindowId,
         handle: (logInfo) {
@@ -98,12 +99,12 @@ async function onResponse(context, request, response) {
 
   static void registerLogHandler(LogHandler logHandler) {
     if (_logHandlers.any((it) => it.channelId == logHandler.channelId)) {
-       _logHandlers.removeWhere((it) => it.channelId == logHandler.channelId);
+      _logHandlers.removeWhere((it) => it.channelId == logHandler.channelId);
     }
     _logHandlers.add(logHandler);
   }
 
-  static void removeLogHandler(int channelId) {
+  static void removeLogHandler(String channelId) {
     _logHandlers.removeWhere((element) => channelId == element.channelId);
   }
 
@@ -142,23 +143,8 @@ async function onResponse(context, request, response) {
     _scriptMap.clear();
   }
 
-  static String? _homePath;
-
-  static Future<String> homePath() async {
-    if (_homePath != null) {
-      return _homePath!;
-    }
-
-    if (Platform.isMacOS) {
-      _homePath = await DesktopMultiWindow.invokeMethod(0, "getApplicationSupportDirectory");
-    } else {
-      _homePath = await getApplicationSupportDirectory().then((it) => it.path);
-    }
-    return _homePath!;
-  }
-
   static Future<File> get _path async {
-    final path = await homePath();
+    final path = await Paths.homePath();
     var file = File('$path${separator}script.json');
     if (!await file.exists()) {
       await file.create();
@@ -181,7 +167,7 @@ async function onResponse(context, request, response) {
       return script;
     }
 
-    final home = await homePath();
+    final home = await Paths.homePath();
     var script = await File(home + item.scriptPath!).readAsString();
     _scriptMap[item] = script;
     return script;
@@ -218,7 +204,7 @@ async function onResponse(context, request, response) {
     }
 
     script ??= template;
-    final path = await homePath();
+    final path = await Paths.homePath();
     String scriptPath = "${separator}scripts$separator${RandomUtil.randomString(16)}.js";
     var file = File(path + scriptPath);
     await file.create(recursive: true);
@@ -240,7 +226,7 @@ async function onResponse(context, request, response) {
       return;
     }
 
-    final home = await homePath();
+    final home = await Paths.homePath();
     File(home + item.scriptPath!).writeAsString(script);
     _scriptMap[item] = script;
   }
@@ -251,7 +237,7 @@ async function onResponse(context, request, response) {
     _scriptMap.remove(item);
 
     if (item.scriptPath != null) {
-      final home = await homePath();
+      final home = await Paths.homePath();
       File(home + item.scriptPath!).delete();
     }
   }
@@ -261,7 +247,7 @@ async function onResponse(context, request, response) {
     while (list.isNotEmpty) {
       var item = list.removeLast();
       if (item.scriptPath != null) {
-        final home = await homePath();
+        final home = await Paths.homePath();
         File(home + item.scriptPath!).delete();
       }
     }
@@ -277,7 +263,27 @@ async function onResponse(context, request, response) {
 
   ///脚本上下文
   Map<String, dynamic> scriptContext(ScriptItem item) {
-    return {'scriptName': item.name, 'os': Platform.operatingSystem, 'session': scriptSession, "deviceId": deviceId};
+    final env = EnvironmentManager.instanceOrNull?.flatMap() ?? const <String, String>{};
+    return {
+      'scriptName': item.name,
+      'os': Platform.operatingSystem,
+      'session': scriptSession,
+      'deviceId': deviceId,
+      'env': env,
+    };
+  }
+
+  /// 处理脚本可能修改的 env:diff 后写回 EnvironmentManager 并持久化。
+  Future<void> _applyScriptEnv(Map<String, String> envBefore, Map<dynamic, dynamic>? scriptContextResult) async {
+    if (scriptContextResult == null) return;
+    final envAfter = scriptContextResult['env'];
+    if (envAfter is! Map) return;
+    final mgr = EnvironmentManager.instanceOrNull;
+    if (mgr == null || !mgr.enabled) return;
+    final changed = mgr.applyScriptEnvChanges(envBefore, envAfter);
+    if (changed) {
+      await mgr.flushConfig();
+    }
   }
 
   ///运行脚本
@@ -288,22 +294,32 @@ async function onResponse(context, request, response) {
     var url = request.domainPath;
     for (var item in list) {
       if (item.enabled && item.match(url)) {
-        var context = jsonEncode(scriptContext(item));
-        var jsRequest = jsonEncode(await JavaScriptEngine.convertJsRequest(request));
+        final ctxMap = scriptContext(item);
+        // 记录脚本运行前的 env 快照,便于运行后做 diff
+        final envBefore = Map<String, String>.from(ctxMap['env'] as Map);
+        var context = jsonEncode(ctxMap);
+        var jsRequestMap = await JavaScriptEngine.convertJsRequest(request);
+        var jsRequest = jsonEncode(jsRequestMap);
         String? script = await getScript(item);
         if (script == null) {
           continue;
         }
 
-        var jsResult = await flutterJs.evaluateAsync(
-            """var request = $jsRequest, context = $context;  request['scriptContext'] = context; $script\n  onRequest(context, request)""");
-        var result = await JavaScriptEngine.jsResultResolve(flutterJs, jsResult);
+        var result = await flutterJsPool.run((flutterJs) async {
+          var jsResult = await flutterJs.evaluateAsync(
+              """var request = $jsRequest, context = $context;  request['scriptContext'] = context; $script\n  onRequest(context, request)""");
+          return await JavaScriptEngine.jsResultResolve(flutterJs, jsResult);
+        });
         if (result == null) {
           return null;
         }
         request.attributes['scriptContext'] = result['scriptContext'];
         scriptSession = result['scriptContext']['session'] ?? {};
-        request = JavaScriptEngine.convertHttpRequest(request, result);
+        await _applyScriptEnv(envBefore, result['scriptContext']);
+        // 脚本未改动请求时保留原始字节，避免 query 重编码/header 重排破坏签名
+        if (!JavaScriptEngine.isRequestUnchanged(jsRequestMap, result)) {
+          request = JavaScriptEngine.convertHttpRequest(request, result);
+        }
       }
     }
     return request;
@@ -319,7 +335,14 @@ async function onResponse(context, request, response) {
     var url = request.domainPath;
     for (var item in list) {
       if (item.enabled && item.match(url)) {
-        var context = jsonEncode(request.attributes['scriptContext'] ?? scriptContext(item));
+        // 响应阶段:优先复用请求阶段设置好的 scriptContext(含中途修改过的 env),
+        // 否则新构建一个。用于 diff 的 envBefore 从最终传给 JS 的 context 中取。
+        final ctxMap =
+            (request.attributes['scriptContext'] as Map?)?.cast<String, dynamic>() ?? scriptContext(item);
+        final envBefore = Map<String, String>.from(((ctxMap['env'] as Map?) ?? const {}).map(
+          (k, v) => MapEntry(k.toString(), v?.toString() ?? ''),
+        ));
+        var context = jsonEncode(ctxMap);
         var jsRequest = jsonEncode(await JavaScriptEngine.convertJsRequest(request));
         var jsResponse = jsonEncode(await JavaScriptEngine.convertJsResponse(response));
         String? script = await getScript(item);
@@ -327,15 +350,17 @@ async function onResponse(context, request, response) {
           continue;
         }
 
-        var jsResult = await flutterJs.evaluateAsync(
-            """var response = $jsResponse, context = $context;  response['scriptContext'] = context; $script
+        var result = await flutterJsPool.run((flutterJs) async {
+          var jsResult = await flutterJs.evaluateAsync(
+              """var response = $jsResponse, context = $context;  response['scriptContext'] = context; $script
             \n  onResponse(context, $jsRequest, response);""");
-        // print("response: ${jsResult.isPromise} ${jsResult.isError} ${jsResult.rawResult}");
-        var result = await JavaScriptEngine.jsResultResolve(flutterJs, jsResult);
+          return await JavaScriptEngine.jsResultResolve(flutterJs, jsResult);
+        });
         if (result == null) {
           return null;
         }
         scriptSession = result['scriptContext']['session'] ?? {};
+        await _applyScriptEnv(envBefore, result['scriptContext']);
         response = JavaScriptEngine.convertHttpResponse(response, result);
       }
     }
@@ -344,7 +369,7 @@ async function onResponse(context, request, response) {
 }
 
 class LogHandler {
-  final int channelId;
+  final String channelId;
   final Function(LogInfo logInfo) handle;
 
   LogHandler({required this.channelId, required this.handle});
@@ -387,7 +412,7 @@ class ScriptItem {
 
   // 匹配url，任意一个规则匹配即可
   bool match(String url) {
-    urlRegs ??= urls.map((u) => RegExp(u.replaceAll("*", ".*"))).toList();
+    urlRegs ??= urls.map((u) => UrlPattern.toHostRegExp(u)).toList();
     for (final reg in urlRegs!) {
       if (reg!.hasMatch(url)) return true;
     }

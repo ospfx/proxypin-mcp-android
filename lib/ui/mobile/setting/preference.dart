@@ -120,17 +120,6 @@ class _PreferenceState extends State<Preference> {
                       })),
               Divider(height: 0, thickness: 0.3, color: dividerColor),
               ListTile(
-                  title: Text(localizations.headerExpanded),
-                  subtitle: Text(localizations.headerExpandedSubtitle, style: const TextStyle(fontSize: 12)),
-                  trailing: SwitchWidget(
-                      value: appConfiguration.headerExpanded,
-                      scale: 0.8,
-                      onChanged: (value) {
-                        appConfiguration.headerExpanded = value;
-                        appConfiguration.flushConfig();
-                      })),
-              Divider(height: 0, thickness: 0.3, color: dividerColor),
-              ListTile(
                   title: Text(localizations.bottomNavigation),
                   subtitle: Text(localizations.bottomNavigationSubtitle, style: const TextStyle(fontSize: 12)),
                   trailing: SwitchWidget(
@@ -138,6 +127,17 @@ class _PreferenceState extends State<Preference> {
                       scale: 0.8,
                       onChanged: (value) {
                         appConfiguration.bottomNavigation = value;
+                        appConfiguration.flushConfig();
+                      })),
+              Divider(height: 0, thickness: 0.3, color: dividerColor),
+              ListTile(
+                  title: Text(localizations.clearConfirm),
+                  subtitle: Text(localizations.clearConfirmSubtitle, style: const TextStyle(fontSize: 12)),
+                  trailing: SwitchWidget(
+                      value: appConfiguration.clearConfirm,
+                      scale: 0.8,
+                      onChanged: (value) {
+                        appConfiguration.clearConfirm = value;
                         appConfiguration.flushConfig();
                       })),
             ]),
@@ -208,6 +208,27 @@ class _PreferenceState extends State<Preference> {
                       Navigator.of(context).pop();
                     },
                     child: const Text("繁體中文")),
+                const Divider(thickness: 0.5, height: 0),
+                TextButton(
+                    onPressed: () {
+                      appConfiguration.language = const Locale.fromSubtags(languageCode: 'vi');
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("Tiếng Việt")),
+                const Divider(thickness: 0.5, height: 0),
+                TextButton(
+                    onPressed: () {
+                      appConfiguration.language = const Locale.fromSubtags(languageCode: 'th');
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("ไทย")),
+                const Divider(thickness: 0.5, height: 0),
+                TextButton(
+                    onPressed: () {
+                      appConfiguration.language = const Locale.fromSubtags(languageCode: 'es');
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("Español")),
                 const Divider(thickness: 0.5, height: 0),
                 TextButton(
                     child: const Text("English"),

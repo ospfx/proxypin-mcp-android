@@ -19,16 +19,20 @@ import 'dart:collection';
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:proxypin/l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:proxypin/l10n/app_localizations.dart';
 import 'package:proxypin/network/bin/configuration.dart';
 import 'package:proxypin/network/bin/server.dart';
-import 'package:proxypin/network/components/host_filter.dart';
 import 'package:proxypin/network/channel/host_port.dart';
+import 'package:proxypin/network/components/host_filter.dart';
 import 'package:proxypin/network/http/http.dart';
 import 'package:proxypin/network/http/http_client.dart';
+import 'package:proxypin/ui/component/model/search_model.dart';
+import 'package:proxypin/ui/component/multi_select_controller.dart';
 import 'package:proxypin/ui/component/widgets.dart';
 import 'package:proxypin/ui/mobile/request/request_sequence.dart';
+import 'package:proxypin/utils/export_request.dart';
+import 'package:proxypin/utils/lang.dart';
 import 'package:proxypin/utils/listenable_list.dart';
 
 ///域名列表
@@ -37,8 +41,9 @@ class DomainList extends StatefulWidget {
   final ListenableList<HttpRequest> list;
   final ProxyServer proxyServer;
   final Function(List<HttpRequest>)? onRemove;
+  final VoidCallback? onInitialized; // 初始化完成回调
 
-  const DomainList({super.key, required this.list, required this.proxyServer, this.onRemove});
+  const DomainList({super.key, required this.list, required this.proxyServer, this.onRemove, this.onInitialized});
 
   @override
   State<StatefulWidget> createState() {
@@ -63,8 +68,8 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
 
   HostAndPort? showHostAndPort;
 
-  //搜索关键字
-  String? searchText;
+  //域名匹配函数；为 null 表示当前没有搜索条件
+  bool Function(String)? _domainMatcher;
 
   bool changing = false;
 
@@ -77,9 +82,14 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     super.initState();
     configuration = widget.proxyServer.configuration;
     initFromContainer();
+
+    // 通知父组件初始化完成
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onInitialized?.call();
+    });
   }
 
-  initFromContainer() {
+  void initFromContainer() {
     for (var request in widget.list) {
       var hostAndPort = request.hostAndPort!;
       domainList.add(hostAndPort);
@@ -90,7 +100,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     view = domainList.toList();
   }
 
-  add(HttpRequest request) {
+  void add(HttpRequest request) {
     var hostAndPort = request.hostAndPort!;
     domainList.remove(hostAndPort);
     domainList.add(hostAndPort);
@@ -109,7 +119,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     changeState();
   }
 
-  addResponse(HttpResponse response) {
+  void addResponse(HttpResponse response) {
     HostAndPort? hostAndPort = response.request!.hostAndPort;
     if (response.isWebSocket) {
       add(response.request!);
@@ -120,7 +130,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     }
   }
 
-  clean() {
+  void clean() {
     setState(() {
       view.clear();
       domainList.clear();
@@ -130,10 +140,10 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     });
   }
 
-  remove(List<HttpRequest> list) {
+  void remove(List<HttpRequest> list) {
     for (var request in list) {
       containerMap[request.hostAndPort]?.remove(request);
-      if (containerMap[request.hostAndPort]!.isEmpty) {
+      if (containerMap[request.hostAndPort]?.isEmpty ?? false) {
         domainList.remove(request.hostAndPort);
         view.remove(request.hostAndPort);
       }
@@ -143,41 +153,35 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   }
 
   ///搜索域名
-  void search(String? text) {
-    if (text == null) {
+  void search(SearchModel? searchModel) {
+    final keyword = searchModel?.keyword?.trim();
+    if (searchModel == null || keyword == null || keyword.isEmpty) {
+      _domainMatcher = null;
       setState(() {
         view = List.of(domainList.toList().reversed);
-        searchText = null;
       });
       return;
     }
 
-    text = text.toLowerCase();
-
-    var contains = text.contains(searchText ?? "");
-    searchText = text.toLowerCase();
-    if (contains) {
-      //包含从上次结果过滤
-      view.retainWhere(filter);
-    } else {
-      view = List.of(domainList.where(filter).toList().reversed);
-    }
+    _domainMatcher = searchModel.buildMatcher();
+    view = List.of(domainList.where(filter).toList().reversed);
     changeState();
   }
 
   ///排序
-  sort(bool desc) {
+  void sort(bool desc) {
     sortDesc = desc;
   }
 
   bool filter(HostAndPort hostAndPort) {
-    if (searchText?.isNotEmpty == true) {
-      return hostAndPort.domain.toLowerCase().contains(searchText!);
+    final matcher = _domainMatcher;
+    if (matcher == null) {
+      return true;
     }
-    return true;
+    return matcher(hostAndPort.domain);
   }
 
-  changeState() {
+  void changeState() {
     //防止频繁刷新
     if (!changing) {
       changing = true;
@@ -234,22 +238,27 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
             return Scaffold(
                 appBar: AppBar(title: Text(view.elementAt(index).domain, style: const TextStyle(fontSize: 16))),
                 body: RequestSequence(
-                    key: requestSequenceKey,
-                    displayDomain: false,
-                    container: ListenableList(sortDesc ? list : list?.reversed.toList()),
-                    sortDesc: sortDesc,
-                    onRemove: widget.onRemove,
-                    proxyServer: widget.proxyServer));
+                  key: requestSequenceKey,
+                  displayDomain: false,
+                  container: ListenableList(sortDesc ? list : list?.reversed.toList()),
+                  sortDesc: sortDesc,
+                  onRemove: (requests) {
+                    widget.onRemove?.call(requests);
+                    remove(requests);
+                  },
+                  proxyServer: widget.proxyServer,
+                  selectionController: MultiSelectController(),
+                ));
           }));
         });
   }
 
-  scrollToTop() {
+  void scrollToTop() {
     _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
   }
 
   ///菜单
-  menu(int index) {
+  void menu(int index) {
     var hostAndPort = view.elementAt(index);
 
     showModalBottomSheet(
@@ -295,6 +304,12 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
                   text: localizations.repeatDomainRequests,
                   onPressed: () {
                     repeatDomainRequests(hostAndPort);
+                  }),
+              const Divider(thickness: 0.5, height: 5),
+              BottomSheetItem(
+                  text: localizations.exportDomainHar,
+                  onPressed: () {
+                    exportDomainHar(hostAndPort);
                   }),
               const Divider(thickness: 0.5, height: 5),
               BottomSheetItem(
@@ -344,5 +359,25 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
         if (mounted) FlutterToastr.show('${localizations.fail}$e', rootNavigator: true, context);
       }
     }
+  }
+
+  Future<void> exportDomainHar(HostAndPort hostAndPort) async {
+    var requests = containerMap[hostAndPort] ?? [];
+    if (requests.isEmpty) {
+      if (mounted) FlutterToastr.show(localizations.emptyData, context);
+      return;
+    }
+
+    var folderName = _domainFileName(hostAndPort, '').replaceAll('.', '');
+    showExportDialog(context, requests, folderName);
+  }
+
+  String _domainFileName(HostAndPort hostAndPort, String extension) {
+    var suffix = (hostAndPort.port == 80 || hostAndPort.port == 443) ? '' : '_${hostAndPort.port}';
+    var safeDomain = '${hostAndPort.host}$suffix'.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    if (safeDomain.isEmpty) {
+      safeDomain = 'domain';
+    }
+    return 'proxypin_${safeDomain}_${DateTime.now().dateFormat()}.$extension';
   }
 }

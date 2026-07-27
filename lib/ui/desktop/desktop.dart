@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -25,6 +26,7 @@ import 'package:proxypin/network/channel/channel.dart';
 import 'package:proxypin/network/channel/channel_context.dart';
 import 'package:proxypin/network/http/http.dart';
 import 'package:proxypin/network/http/websocket.dart';
+import 'package:proxypin/storage/histories.dart';
 import 'package:proxypin/ui/component/memory_cleanup.dart';
 import 'package:proxypin/ui/component/widgets.dart';
 import 'package:proxypin/ui/configuration.dart';
@@ -62,6 +64,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   static final GlobalKey<DesktopRequestListState> requestListStateKey = GlobalKey<DesktopRequestListState>();
 
   final ValueNotifier<int> _selectIndex = ValueNotifier(0);
+  StreamSubscription<HistoryItem>? _remoteHistorySubscription;
 
   late ProxyServer proxyServer = ProxyServer(widget.configuration);
   late NetworkTabController panel;
@@ -71,6 +74,11 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   @override
   void onRequest(Channel channel, HttpRequest request) {
     requestListStateKey.currentState!.add(channel, request);
+
+    if (request.attributes['quickShare'] == true) {
+      _selectIndex.value = 0;
+      panel.change(request, request.response);
+    }
 
     //监控内存 到达阈值清理
     MemoryCleanupMonitor.onMonitor(onCleanup: () {
@@ -95,16 +103,27 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
     super.initState();
     proxyServer.addListener(this);
     panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 16), proxyServer: proxyServer);
+    _remoteHistorySubscription = HistoryStorage.onRemoteImported.listen((_) {
+      if (mounted) {
+        _selectIndex.value = 2;
+      }
+    });
 
     McpServer.instance.bindRequestContainer(container);
 
-    if (widget.appConfiguration.upgradeNoticeV26) {
+    if (widget.appConfiguration.upgradeNoticeV29) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
     } else {
       AppUpdateRepository.checkUpdate(context);
     }
+  }
+
+  @override
+  void dispose() {
+    _remoteHistorySubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -174,7 +193,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
               actions: [
                 TextButton(
                     onPressed: () {
-                      widget.appConfiguration.upgradeNoticeV26 = false;
+                      widget.appConfiguration.upgradeNoticeV29 = false;
                       widget.appConfiguration.flushConfig();
                       Navigator.pop(context);
                     },
@@ -188,21 +207,24 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                       isCN
                           ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                               '点击HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
-                              '1. 新增请求断点，可修改请求、响应后发送；\n'
-                              '2. 在请求编辑器中为Header添加自动补全建议；\n'
-                              '3. Android、iOS新增系统代理IP忽略设置；\n'
-                              '4. Android新增系统代理是否启用设置；\n'
-                              '5. Socks5代理新增 IPV6 支持；\n'
-                              '6. 修复 MacOS 网线代理设置失败问题；\n'
+                              '1. 新增文本对比工具，支持逐行高亮与差异摘要；\n'
+                              '2. 新增文本编辑器，支持语法高亮与文件读写；\n'
+                              '3. 新增 JSON / XML 查看器，支持解析与格式化；\n'
+                              '4. 增强请求体编辑器，内容类型识别、格式化美化、大文本编辑等；\n'
+                              '5. 搜索能力升级：支持正则搜索，并优化匹配索引与缓存；\n'
+                              '6. 导出能力增强：支持导出请求/响应文本与 HAR，HAR 图片支持 Base64 编码；\n'
+                              '7. 优化：新增清空抓包前确认弹窗，清空默认系统代理忽略域名； \n'
+                              '8. 其他：HTML、JSON、CSS 代码格式化使用独立线程减少ui卡顿，修复 iPadOS 窗口模式返回按钮遮挡。\n'
                           : 'Note: HTTPS capture is disabled by default — please install the certificate before enabling HTTPS capture.\n'
                               'Click the HTTPS capture (lock) icon, choose "Install Root Certificate", and follow the prompts to complete installation.\n\n'
-                              '1. Added request breakpoint feature, allowing modification of requests and responses before sending;\n'
-                              '2. Added autocomplete suggestions for HTTP headers in request editor;\n'
-                              '3. Added system proxy IP ignore settings for Android and iOS;\n'
-                              '4. Added system proxy enable/disable settings for Android;\n'
-                              '5. Added IPv6 support for Socks5 proxy;\n'
-                              '6. Fixed an issue where proxy settings failed on macOS; \n'
-                              ,
+                              '1. Added a text diff tool with line-by-line highlighting and a diff summary;\n'
+                              '2. Added a text editor with syntax highlighting and file read/write support;\n'
+                              '3. Added JSON/XML viewers with parsing and formatting support;\n'
+                              '4. Enhanced the request body editor with content-type detection, beautification, and large-text editing support;\n'
+                              '5. Upgraded search capabilities: added regex search and optimized match indexing and caching;\n'
+                              '6. Improved export capabilities: supports request/response text export and HAR export, with Base64 image support in HAR;\n'
+                              '7. Optimizations: added a confirmation dialog before clearing captured records, cleared default system proxy bypass domains;\n'
+                              '8. Other: moved HTML/JSON/CSS formatting to isolates to reduce UI jank, and fixed the back-button overlap issue in iPadOS window mode.\n',
                       style: const TextStyle(fontSize: 14))));
         });
   }

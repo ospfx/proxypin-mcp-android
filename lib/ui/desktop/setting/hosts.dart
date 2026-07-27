@@ -15,7 +15,6 @@
  */
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
@@ -50,7 +49,7 @@ class _HostsDialogState extends State<HostsDialog> {
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
-  saveConfig() {
+  void saveConfig() {
     if (saving) return;
     saving = true;
     Future.delayed(const Duration(milliseconds: 3000), () {
@@ -133,7 +132,7 @@ class _HostsDialogState extends State<HostsDialog> {
                     const SizedBox(height: 8),
                     Container(
                         height: 430,
-                        decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
+                        decoration: BoxDecoration(border: Border.all(color: Colors.grey.withValues(alpha: 0.2))),
                         child: Column(children: [
                           const SizedBox(height: 5),
                           Row(children: [
@@ -164,7 +163,7 @@ class _HostsDialogState extends State<HostsDialog> {
       InkWell(
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
-          hoverColor: primaryColor.withOpacity(0.3),
+          hoverColor: primaryColor.withValues(alpha: 0.3),
           onSecondaryTapDown: (details) => showMenus(details, item),
           onDoubleTap: item.isFolder ? null : () => showEdit(item: item),
           onTap: () {
@@ -197,9 +196,9 @@ class _HostsDialogState extends State<HostsDialog> {
           },
           child: Container(
               color: selected.contains(item)
-                  ? primaryColor.withOpacity(0.6)
+                  ? primaryColor.withValues(alpha: 0.6)
                   : isEven
-                      ? Colors.grey.withOpacity(0.1)
+                      ? Colors.grey.withValues(alpha: 0.1)
                       : null,
               height: 35,
               padding: padding ?? const EdgeInsets.symmetric(vertical: 3),
@@ -237,11 +236,11 @@ class _HostsDialogState extends State<HostsDialog> {
     ]);
   }
 
-  newFolder() {
+  void newFolder() {
     showEdit(isFolder: true);
   }
 
-  enableStatus(bool enable) {
+  void enableStatus(bool enable) {
     if (selected.isEmpty) return;
 
     for (var item in selected) {
@@ -253,7 +252,7 @@ class _HostsDialogState extends State<HostsDialog> {
     });
   }
 
-  showGlobalMenu(Offset offset) {
+  void showGlobalMenu(Offset offset) {
     showContextMenu(context, offset, items: [
       PopupMenuItem(height: 35, child: Text(localizations.newBuilt), onTap: () => showEdit()),
       PopupMenuItem(
@@ -271,7 +270,7 @@ class _HostsDialogState extends State<HostsDialog> {
   }
 
   //点击菜单
-  showMenus(TapDownDetails details, HostsItem item) {
+  void showMenus(TapDownDetails details, HostsItem item) {
     if (selected.length > 1) {
       showGlobalMenu(details.globalPosition);
       return;
@@ -311,7 +310,7 @@ class _HostsDialogState extends State<HostsDialog> {
     });
   }
 
-  showEdit({HostsItem? item, HostsItem? parent, bool? isFolder}) {
+  void showEdit({HostsItem? item, HostsItem? parent, bool? isFolder}) {
     isFolder ??= item?.isFolder == true;
     showDialog(
         context: context,
@@ -339,9 +338,9 @@ class _HostsDialogState extends State<HostsDialog> {
   }
 
   //导入
-  import() async {
-    final FilePickerResult? result = await FilePicker.platform
-        .pickFiles(allowedExtensions: ['json'], type: FileType.custom, initialDirectory: "/Downloads");
+  Future<void> import() async {
+    final FilePickerResult? result =
+        await FilePicker.pickFiles(allowedExtensions: ['json'], type: FileType.custom, initialDirectory: "/Downloads");
     var file = result?.files.single;
     if (file == null) {
       return;
@@ -379,22 +378,19 @@ class _HostsDialogState extends State<HostsDialog> {
   }
 
   //导出
-  export(Iterable<HostsItem> items) async {
+  Future<void> export(Iterable<HostsItem> items) async {
     if (items.isEmpty) return;
 
     String fileName = 'hosts.json';
-    var path = await FilePicker.platform.saveFile(fileName: fileName);
-    if (path == null) {
-      return;
-    }
-
     var list = [];
     for (var item in items) {
       var json = item.toJson();
       list.add(json);
     }
-
-    await File(path).writeAsBytes(utf8.encode(jsonEncode(list)));
+    var path = await FilePicker.saveFile(fileName: fileName, bytes: utf8.encode(jsonEncode(list)));
+    if (path == null) {
+      return;
+    }
     if (mounted) FlutterToastr.show(localizations.exportSuccess, context);
   }
 }

@@ -16,7 +16,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:proxypin/ui/component/multi_window_compat.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -33,13 +33,15 @@ import 'package:proxypin/ui/component/widgets.dart';
 import 'package:proxypin/ui/desktop/setting/rewrite/rewrite_replace.dart';
 import 'package:proxypin/ui/desktop/setting/rewrite/rewrite_update.dart';
 import 'package:proxypin/utils/lang.dart';
+import 'package:proxypin/utils/platform.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../component/http_method_popup.dart';
 
 /// @author wanghongen
 /// 2023/10/8
 class RequestRewriteWidget extends StatefulWidget {
-  final int windowId;
+  final String windowId;
   final RequestRewriteManager requestRewrites;
 
   const RequestRewriteWidget({super.key, required this.windowId, required this.requestRewrites});
@@ -91,14 +93,14 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Theme.of(context).dialogBackgroundColor,
+        backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
         appBar: AppBar(
             title:
                 Text(localizations.requestRewrite, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
             toolbarHeight: 34,
             centerTitle: true),
         body: Padding(
-            padding: const EdgeInsets.only(left: 15, right: 10),
+            padding: const EdgeInsets.only(left: 15, right: 10, bottom: 10),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
                 SizedBox(
@@ -143,7 +145,7 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
                 const SizedBox(width: 15)
               ]),
               const SizedBox(height: 10),
-              RequestRuleList(widget.requestRewrites, windowId: widget.windowId),
+              Expanded(child: RequestRuleList(widget.requestRewrites, windowId: widget.windowId)),
             ])));
   }
 
@@ -155,17 +157,8 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
 
   //导入js
   Future<void> import() async {
-    String? path;
-    if (Platform.isMacOS) {
-      path = await DesktopMultiWindow.invokeMethod(0, "pickFiles", {
-        "allowedExtensions": ['config', 'json']
-      });
-      WindowController.fromWindowId(widget.windowId).show();
-    } else {
-      FilePickerResult? result =
-          await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['config', 'json']);
-      path = result?.files.single.path;
-    }
+    FilePickerResult? result = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['config', 'json']);
+    String? path = result?.files.single.path;
 
     if (path == null) {
       return;
@@ -205,7 +198,7 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
 
 ///请求重写规则列表
 class RequestRuleList extends StatefulWidget {
-  final int windowId;
+  final String windowId;
   final RequestRewriteManager requestRewrites;
 
   const RequestRuleList(this.requestRewrites, {super.key, required this.windowId});
@@ -258,8 +251,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
             },
             child: Container(
                 padding: const EdgeInsets.only(top: 10),
-                constraints: const BoxConstraints(maxHeight: 600, minHeight: 550),
-                decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
+                decoration: BoxDecoration(border: Border.all(color: Colors.grey.withValues(alpha: 0.2))),
                 child: SingleChildScrollView(
                     child: Column(children: [
                   Row(
@@ -304,13 +296,13 @@ class _RequestRuleListState extends State<RequestRuleList> {
 
   List<Widget> rows(List<RequestRewriteRule> list) {
     var primaryColor = Theme.of(context).colorScheme.primary;
-    bool isEN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'en');
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
 
     return List.generate(list.length, (index) {
       return InkWell(
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
-          hoverColor: primaryColor.withOpacity(0.3),
+          hoverColor: primaryColor.withValues(alpha: 0.3),
           onSecondaryTapDown: (details) => showMenus(details, index),
           onDoubleTap: () => showEdit(index),
           onHover: (hover) {
@@ -336,9 +328,9 @@ class _RequestRuleListState extends State<RequestRuleList> {
           },
           child: Container(
               color: selected[index] == true
-                  ? primaryColor.withOpacity(0.6)
+                  ? primaryColor.withValues(alpha: 0.6)
                   : index.isEven
-                      ? Colors.grey.withOpacity(0.1)
+                      ? Colors.grey.withValues(alpha: 0.1)
                       : null,
               height: 30,
               padding: const EdgeInsets.all(5),
@@ -360,7 +352,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                           Text(list[index].url, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
                   SizedBox(
                       width: 100,
-                      child: Text(isEN ? list[index].type.name.camelCaseToSpaced() : list[index].type.label,
+                      child: Text(isCN ? list[index].type.label : list[index].type.name.camelCaseToSpaced(),
                           textAlign: TextAlign.center, style: const TextStyle(fontSize: 13))),
                 ],
               )));
@@ -372,15 +364,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
     if (indexes.isEmpty) return;
 
     String fileName = 'proxypin-rewrites.config';
-
-    String? path;
-    if (Platform.isMacOS) {
-      path = await DesktopMultiWindow.invokeMethod(0, "saveFile", {"fileName": fileName});
-      WindowController.fromWindowId(widget.windowId).show();
-    } else {
-      path = await FilePicker.platform.saveFile(fileName: fileName);
-    }
-
+    String? path = await Platforms.saveFileAdaptive(fileName: fileName);
     if (path == null) {
       return;
     }
@@ -479,7 +463,7 @@ class RewriteRuleEdit extends StatefulWidget {
   final RequestRewriteRule? rule;
   final List<RewriteItem>? items;
   final HttpRequest? request;
-  final int? windowId;
+  final String? windowId;
 
   const RewriteRuleEdit({super.key, this.rule, this.items, this.windowId, this.request});
 
@@ -540,17 +524,14 @@ class _RewriteRuleEditState extends State<RewriteRuleEdit> {
               text: localizations.useGuide,
               style: const TextStyle(color: Colors.blue, fontSize: 14),
               recognizer: TapGestureRecognizer()
-                ..onTap = () => DesktopMultiWindow.invokeMethod(
-                    0,
-                    "launchUrl",
-                    isCN
-                        ? 'https://gitee.com/wanghongenpin/proxypin/wikis/%E8%AF%B7%E6%B1%82%E9%87%8D%E5%86%99'
-                        : 'https://github.com/wanghongenpin/proxypin/wiki/Request-Rewrite'))),
+                ..onTap = () => launchUrl(Uri.parse(isCN
+                    ? 'https://gitee.com/wanghongenpin/proxypin/wikis/%E8%AF%B7%E6%B1%82%E9%87%8D%E5%86%99'
+                    : 'https://github.com/wanghongenpin/proxypin/wiki/Request-Rewrite')))),
         ]),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         content: Container(
             width: 550,
-            constraints: const BoxConstraints(minHeight: 200, maxHeight: 560),
+            constraints: const BoxConstraints(minHeight: 200, maxHeight: 564),
             child: Form(
                 key: formKey,
                 child: Column(
@@ -600,11 +581,11 @@ class _RewriteRuleEditState extends State<RewriteRuleEdit> {
                       Row(children: [
                         SizedBox(width: 60, child: Text('${localizations.action}:')),
                         SizedBox(
-                            width: 150,
+                            width: 170,
                             height: 36,
                             child: DropdownButtonFormField<RuleType>(
                               onSaved: (val) => rule.type = val!,
-                              value: ruleType,
+                              initialValue: ruleType,
                               decoration: InputDecoration(
                                   errorStyle: const TextStyle(height: 0, fontSize: 0),
                                   contentPadding: const EdgeInsets.only(left: 7, right: 7),

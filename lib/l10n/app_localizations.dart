@@ -1,12 +1,16 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
-import 'app_localizations_en.dart';
-import 'app_localizations_zh.dart';
+import 'app_localizations_en.dart' deferred as app_localizations_en;
+import 'app_localizations_es.dart' deferred as app_localizations_es;
+import 'app_localizations_id.dart' deferred as app_localizations_id;
+import 'app_localizations_pt.dart' deferred as app_localizations_pt;
+import 'app_localizations_th.dart' deferred as app_localizations_th;
+import 'app_localizations_vi.dart' deferred as app_localizations_vi;
+import 'app_localizations_zh.dart' deferred as app_localizations_zh;
 
 // ignore_for_file: type=lint
 
@@ -92,6 +96,12 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
+    Locale('es'),
+    Locale('id'),
+    Locale('pt'),
+    Locale('pt', 'BR'),
+    Locale('th'),
+    Locale('vi'),
     Locale('zh'),
     Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant')
   ];
@@ -359,6 +369,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Automatically start recording traffic when the program starts'**
   String get autoStartupDescribe;
+
+  /// No description provided for @minimizeToTrayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize to tray on close'**
+  String get minimizeToTrayTitle;
+
+  /// No description provided for @minimizeToTraySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing the window will keep ProxyPin running and hide it to the system tray.'**
+  String get minimizeToTraySubtitle;
+
+  /// No description provided for @trayClosePromptContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing the window will keep ProxyPin running in the system tray. Do you want to minimize it now?'**
+  String get trayClosePromptContent;
+
+  /// No description provided for @trayCloseExitAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit anyway'**
+  String get trayCloseExitAnyway;
+
+  /// No description provided for @trayCloseMinimizeToTray.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize to tray'**
+  String get trayCloseMinimizeToTray;
 
   /// No description provided for @copied.
   ///
@@ -690,6 +730,12 @@ abstract class AppLocalizations {
   /// **'Click'**
   String get click;
 
+  /// No description provided for @loadRemoteScript.
+  ///
+  /// In en, this message translates to:
+  /// **'load remote script'**
+  String get loadRemoteScript;
+
   /// No description provided for @replace.
   ///
   /// In en, this message translates to:
@@ -761,6 +807,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit Report Server'**
   String get editReportServer;
+
+  /// No description provided for @splitReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Report'**
+  String get splitReport;
 
   /// No description provided for @serverUrl.
   ///
@@ -930,6 +982,12 @@ abstract class AppLocalizations {
   /// **'Select action'**
   String get selectAction;
 
+  /// No description provided for @select.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get select;
+
   /// No description provided for @copy.
   ///
   /// In en, this message translates to:
@@ -971,6 +1029,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy as Python Requests'**
   String get copyAsPythonRequests;
+
+  /// No description provided for @copyAsFetch.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy as fetch'**
+  String get copyAsFetch;
 
   /// No description provided for @delete.
   ///
@@ -1067,6 +1131,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View Export'**
   String get viewExport;
+
+  /// No description provided for @exportDomainHar.
+  ///
+  /// In en, this message translates to:
+  /// **'Export This Domain HAR'**
+  String get exportDomainHar;
 
   /// No description provided for @timeDesc.
   ///
@@ -1470,11 +1540,11 @@ abstract class AppLocalizations {
   /// **'Share cURL Request'**
   String get shareCurl;
 
-  /// No description provided for @shareRequestResponse.
+  /// No description provided for @requestResponse.
   ///
   /// In en, this message translates to:
-  /// **'Share Request and Response'**
-  String get shareRequestResponse;
+  /// **'Request and Response'**
+  String get requestResponse;
 
   /// No description provided for @captureDetail.
   ///
@@ -1569,13 +1639,13 @@ abstract class AppLocalizations {
   /// No description provided for @ipLayerProxy.
   ///
   /// In en, this message translates to:
-  /// **'IP Layer Proxy(Beta)'**
+  /// **'IP Layer Proxy'**
   String get ipLayerProxy;
 
   /// No description provided for @ipLayerProxyDesc.
   ///
   /// In en, this message translates to:
-  /// **'IP layer proxy can capture Flutter app requests, currently not very stable, welcome to submit PR'**
+  /// **'IP layer proxy can capture Flutter app requests'**
   String get ipLayerProxyDesc;
 
   /// No description provided for @inputAddress.
@@ -1644,18 +1714,6 @@ abstract class AppLocalizations {
   /// **'Show quick access to small window Icon'**
   String get pipIconDescribe;
 
-  /// No description provided for @headerExpanded.
-  ///
-  /// In en, this message translates to:
-  /// **'Headers Expanded'**
-  String get headerExpanded;
-
-  /// No description provided for @headerExpandedSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Details page Headers is expanded by default'**
-  String get headerExpandedSubtitle;
-
   /// No description provided for @bottomNavigation.
   ///
   /// In en, this message translates to:
@@ -1679,6 +1737,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Automatically clean up requests on memory limit reached and keep 32 most recent after cleaning'**
   String get memoryCleanupSubtitle;
+
+  /// No description provided for @clearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm before clearing captured records'**
+  String get clearConfirm;
+
+  /// No description provided for @clearConfirmSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a confirmation dialog before clearing captured records'**
+  String get clearConfirmSubtitle;
 
   /// No description provided for @unlimited.
   ///
@@ -1896,6 +1966,84 @@ abstract class AppLocalizations {
   /// **'QR Code'**
   String get qrCode;
 
+  /// No description provided for @jsonViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'JSON Viewer'**
+  String get jsonViewer;
+
+  /// No description provided for @xmlViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'XML Viewer'**
+  String get xmlViewer;
+
+  /// No description provided for @textDiff.
+  ///
+  /// In en, this message translates to:
+  /// **'Text Diff'**
+  String get textDiff;
+
+  /// No description provided for @textEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Text Editor'**
+  String get textEditor;
+
+  /// No description provided for @compare.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare'**
+  String get compare;
+
+  /// No description provided for @diffOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get diffOriginal;
+
+  /// No description provided for @diffChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed'**
+  String get diffChanged;
+
+  /// No description provided for @diffIdentical.
+  ///
+  /// In en, this message translates to:
+  /// **'Two texts are identical'**
+  String get diffIdentical;
+
+  /// No description provided for @diffSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'+{added} −{removed}'**
+  String diffSummary(int added, int removed);
+
+  /// No description provided for @text.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get text;
+
+  /// No description provided for @format.
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get format;
+
+  /// No description provided for @compact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get compact;
+
+  /// No description provided for @wordWrap.
+  ///
+  /// In en, this message translates to:
+  /// **'Word Wrap'**
+  String get wordWrap;
+
   /// No description provided for @scanQrCode.
   ///
   /// In en, this message translates to:
@@ -1992,6 +2140,12 @@ abstract class AppLocalizations {
   /// **'Cipher'**
   String get cipher;
 
+  /// No description provided for @view.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get view;
+
   /// No description provided for @appUpdateCheckVersion.
   ///
   /// In en, this message translates to:
@@ -2045,6 +2199,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ignore'**
   String get appUpdateIgnoreBtnTxt;
+
+  /// No description provided for @appUpdateInstallNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Install Now'**
+  String get appUpdateInstallNow;
+
+  /// No description provided for @appUpdateRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get appUpdateRetry;
+
+  /// No description provided for @appUpdateBackgroundDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download in background'**
+  String get appUpdateBackgroundDownload;
+
+  /// No description provided for @appUpdateOpenDownloadPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Download Page'**
+  String get appUpdateOpenDownloadPage;
 
   /// No description provided for @requestMap.
   ///
@@ -2105,12 +2283,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'AFDIAN'**
   String get sponsorAfdian;
-
-  /// No description provided for @sponsorBuyMeCoffee.
-  ///
-  /// In en, this message translates to:
-  /// **'Buy Me a Coffee'**
-  String get sponsorBuyMeCoffee;
 
   /// No description provided for @privacyPolicy.
   ///
@@ -2178,7 +2350,7 @@ abstract class AppLocalizations {
   /// **'Remote URL'**
   String get remoteUrl;
 
-  /// No description provided for @view.
+  /// No description provided for @preview.
   ///
   /// In en, this message translates to:
   /// **'View'**
@@ -2321,6 +2493,56 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid port number'**
   String get mcpInvalidPort;
+  /// **'Preview'**
+  String get preview;
+
+  /// No description provided for @environment.
+  ///
+  /// In en, this message translates to:
+  /// **'Environment'**
+  String get environment;
+
+  /// No description provided for @environmentVariables.
+  ///
+  /// In en, this message translates to:
+  /// **'Environment Variables'**
+  String get environmentVariables;
+
+  /// No description provided for @envGlobal.
+  ///
+  /// In en, this message translates to:
+  /// **'Global'**
+  String get envGlobal;
+
+  /// No description provided for @envManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Environments…'**
+  String get envManage;
+
+  /// No description provided for @envNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No Environment'**
+  String get envNone;
+
+  /// No description provided for @envDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this environment?'**
+  String get envDeleteConfirm;
+
+  /// No description provided for @envEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No variables yet. Click + to add.'**
+  String get envEmptyHint;
+
+  /// No description provided for @envUsageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference variables as %s in rules, or read/write via context.env in scripts.'**
+  String get envUsageHint;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -2328,24 +2550,38 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
 
   @override
   Future<AppLocalizations> load(Locale locale) {
-    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+    return lookupAppLocalizations(locale);
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['en', 'zh'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'es', 'id', 'pt', 'th', 'vi', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
-AppLocalizations lookupAppLocalizations(Locale locale) {
+Future<AppLocalizations> lookupAppLocalizations(Locale locale) {
   // Lookup logic when language+script codes are specified.
   switch (locale.languageCode) {
     case 'zh':
       {
         switch (locale.scriptCode) {
           case 'Hant':
-            return AppLocalizationsZhHant();
+            return app_localizations_zh
+                .loadLibrary()
+                .then((dynamic _) => app_localizations_zh.AppLocalizationsZhHant());
+        }
+        break;
+      }
+  }
+
+  // Lookup logic when language+country codes are specified.
+  switch (locale.languageCode) {
+    case 'pt':
+      {
+        switch (locale.countryCode) {
+          case 'BR':
+            return app_localizations_pt.loadLibrary().then((dynamic _) => app_localizations_pt.AppLocalizationsPtBr());
         }
         break;
       }
@@ -2354,9 +2590,19 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'en':
-      return AppLocalizationsEn();
+      return app_localizations_en.loadLibrary().then((dynamic _) => app_localizations_en.AppLocalizationsEn());
+    case 'es':
+      return app_localizations_es.loadLibrary().then((dynamic _) => app_localizations_es.AppLocalizationsEs());
+    case 'id':
+      return app_localizations_id.loadLibrary().then((dynamic _) => app_localizations_id.AppLocalizationsId());
+    case 'pt':
+      return app_localizations_pt.loadLibrary().then((dynamic _) => app_localizations_pt.AppLocalizationsPt());
+    case 'th':
+      return app_localizations_th.loadLibrary().then((dynamic _) => app_localizations_th.AppLocalizationsTh());
+    case 'vi':
+      return app_localizations_vi.loadLibrary().then((dynamic _) => app_localizations_vi.AppLocalizationsVi());
     case 'zh':
-      return AppLocalizationsZh();
+      return app_localizations_zh.loadLibrary().then((dynamic _) => app_localizations_zh.AppLocalizationsZh());
   }
 
   throw FlutterError('AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '

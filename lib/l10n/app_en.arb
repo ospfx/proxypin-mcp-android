@@ -45,6 +45,11 @@
   "language": "Language",
   "autoStartup": "Auto Start Recording Traffic",
   "autoStartupDescribe": "Automatically start recording traffic when the program starts",
+  "minimizeToTrayTitle": "Minimize to tray on close",
+  "minimizeToTraySubtitle": "Closing the window will keep ProxyPin running and hide it to the system tray.",
+  "trayClosePromptContent": "Closing the window will keep ProxyPin running in the system tray. Do you want to minimize it now?",
+  "trayCloseExitAnyway": "Exit anyway",
+  "trayCloseMinimizeToTray": "Minimize to tray",
 
   "copied": "Copied to clipboard",
   "execute": "Execute",
@@ -102,6 +107,7 @@
   "useGuide": "Use Guide",
   "pleaseEnter": "Please Enter",
   "click": "Click",
+  "loadRemoteScript": "load remote script",
   "replace": "Replace",
   "clickEdit": "Click Edit",
   "refresh": "Refresh",
@@ -114,6 +120,7 @@
   "reportServers": "Report Servers",
   "addReportServer": "Add Report Server",
   "editReportServer": "Edit Report Server",
+  "splitReport": "Split Report",
   "serverUrl": "Server URL",
   "compression": "Compression",
   "compressionNone": "None",
@@ -145,6 +152,7 @@
   "domainListSubtitle": "Last Request Time: {time},  Count: {count}",
 
   "selectAction": "Select action",
+  "select": "Select",
   "copy": "Copy",
   "copyHost": "Copy Host",
   "copyUrl": "Copy URL",
@@ -152,6 +160,7 @@
   "copyRequestResponse": "Copy Request and Response",
   "copyCurl": "Copy cURL",
   "copyAsPythonRequests": "Copy as Python Requests",
+  "copyAsFetch": "Copy as fetch",
   "delete": "Delete",
   "rename": "Rename",
   "repeat": "Repeat",
@@ -168,6 +177,7 @@
   "editRequest": "Edit and Request",
   "reSendRequest": "The request has been resent",
   "viewExport": "View Export",
+  "exportDomainHar": "Export This Domain HAR",
   "timeDesc": "Descending by time",
   "timeAsc": "Ascending by time",
 
@@ -243,7 +253,7 @@
 
   "shareUrl": "Share Request URL",
   "shareCurl": "Share cURL Request",
-  "shareRequestResponse": "Share Request and Response",
+  "requestResponse": "Request and Response",
   "captureDetail": "Capture Detail",
   "proxyPinSoftware": "ProxyPin Open source traffic capture software for all platforms",
 
@@ -260,8 +270,8 @@
   "connected": "Connected",
   "notConnected": "Not connected",
   "disconnect": "Disconnect",
-  "ipLayerProxy": "IP Layer Proxy(Beta)",
-  "ipLayerProxyDesc": "IP layer proxy can capture Flutter app requests, currently not very stable, welcome to submit PR",
+  "ipLayerProxy": "IP Layer Proxy",
+  "ipLayerProxyDesc": "IP layer proxy can capture Flutter app requests",
   "inputAddress": "Input Address",
   "syncConfig": "Sync configuration",
   "pullConfigFail": "Failed to pull configuration, please check the network connection",
@@ -274,12 +284,12 @@
   "windowModeSubTitle": "Enabled Packet Capture, Enter the background, Display a small window",
   "pipIcon": "Window shortcut icon",
   "pipIconDescribe": "Show quick access to small window Icon",
-  "headerExpanded": "Headers Expanded",
-  "headerExpandedSubtitle": "Details page Headers is expanded by default",
   "bottomNavigation": "Bottom Navigation",
   "bottomNavigationSubtitle": "Bottom navigation bar is displayed, effective after restart",
   "memoryCleanup": "Memory Cleanup",
   "memoryCleanupSubtitle": "Automatically clean up requests on memory limit reached and keep 32 most recent after cleaning",
+  "clearConfirm": "Confirm before clearing captured records",
+  "clearConfirmSubtitle": "Show a confirmation dialog before clearing captured records",
   "unlimited": "Unlimited",
   "custom": "Custom",
 
@@ -321,6 +331,25 @@
   "regExp": "RegExp",
   "systemCertName": "System Certificate Name",
   "qrCode": "QR Code",
+  "jsonViewer": "JSON Viewer",
+  "xmlViewer": "XML Viewer",
+  "textDiff": "Text Diff",
+  "textEditor": "Text Editor",
+  "compare": "Compare",
+  "diffOriginal": "Original",
+  "diffChanged": "Changed",
+  "diffIdentical": "Two texts are identical",
+  "diffSummary": "+{added} −{removed}",
+  "@diffSummary": {
+    "placeholders": {
+      "added": { "type": "int" },
+      "removed": { "type": "int" }
+    }
+  },
+  "text": "Text",
+  "format": "Format",
+  "compact": "Compact",
+  "wordWrap": "Word Wrap",
   "scanQrCode": "Scan QR Code",
   "generateQrCode": "Generate",
   "saveImage": "Save Image",
@@ -337,6 +366,7 @@
   "encrypt": "Encrypt",
   "decrypt": "Decrypt",
   "cipher": "Cipher",
+  "view": "View",
 
   "appUpdateCheckVersion": "Check for Updates",
   "appUpdateNotAvailableMsg": "Already Using The Latest Version",
@@ -347,6 +377,10 @@
   "appUpdateUpdateNowBtnTxt": "Update Now",
   "appUpdateLaterBtnTxt": "Later",
   "appUpdateIgnoreBtnTxt": "Ignore",
+  "appUpdateInstallNow": "Install Now",
+  "appUpdateRetry": "Retry",
+  "appUpdateBackgroundDownload": "Download in background",
+  "appUpdateOpenDownloadPage": "Open Download Page",
 
   "requestMap": "Request Map",
   "requestMapDescribe": "Do not request remote services, use local configuration or script for response",
@@ -359,7 +393,6 @@
   "sponsorSupport": "Support ongoing development",
   "sponsorThanks": "Thank you for supporting this open-source project by choosing any of the following methods to help its long-term development.",
   "sponsorAfdian": "AFDIAN",
-  "sponsorBuyMeCoffee": "Buy Me a Coffee",
 
   "privacyPolicy": "Privacy Policy",
   "privacyContent": "This open-source packet capture tool runs entirely on your device. It has no backend server and does not collect, store, or upload any personal data. All captured traffic is processed locally and is only forwarded when you explicitly use remote forwarding. Permissions (e.g., network, storage, and camera for QR codes) are used solely to provide features. You can audit the behavior in the public source code.",
@@ -399,5 +432,15 @@
   "mcpToolCompareDesc": "Compare differences between two requests",
   "mcpStartSuccess": "MCP Server started on port {port}",
   "mcpStopSuccess": "MCP Server stopped",
-  "mcpInvalidPort": "Invalid port number"
+  "mcpInvalidPort": "Invalid port number",
+  "preview": "Preview",
+
+  "environment": "Environment",
+  "environmentVariables": "Environment Variables",
+  "envGlobal": "Global",
+  "envManage": "Manage Environments…",
+  "envNone": "No Environment",
+  "envDeleteConfirm": "Delete this environment?",
+  "envEmptyHint": "No variables yet. Click + to add.",
+  "envUsageHint": "Reference variables as %s in rules, or read/write via context.env in scripts."
 }

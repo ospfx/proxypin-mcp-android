@@ -63,7 +63,7 @@ class ThemeModel {
 }
 
 class AppConfiguration {
-  static const String version = "1.2.6";
+  static const String version = "1.3.0";
 
   ValueNotifier<bool> globalChange = ValueNotifier(false);
 
@@ -71,16 +71,13 @@ class AppConfiguration {
   Locale? _language;
 
   //是否显示更新内容公告
-  bool upgradeNoticeV26 = true;
+  bool upgradeNoticeV29 = true;
 
   /// 是否启用画中画
   ValueNotifier<bool> pipEnabled = ValueNotifier(Platform.isAndroid);
 
   /// 显示画中画图标
   ValueNotifier<bool> pipIcon = ValueNotifier(Platform.isAndroid);
-
-  /// header默认展示
-  bool headerExpanded = true;
 
   /// Headers展示模式: table(逐行) / text(原始文本)
   String headerViewMode = "table";
@@ -94,6 +91,9 @@ class AppConfiguration {
   ///自动已读
   bool autoReadEnabled = true;
 
+  /// 清空抓包前确认
+  bool clearConfirm = false;
+
   //桌面window大小
   Size? windowSize;
 
@@ -102,6 +102,9 @@ class AppConfiguration {
 
   //左侧面板占比
   double panelRatio = 0.3;
+
+  /// 关闭窗口时最小化到系统托盘
+  bool? minimizeToTray;
 
   AppConfiguration._();
 
@@ -199,20 +202,17 @@ class AppConfiguration {
       _theme = ThemeModel(mode: mode, useMaterial3: config['useMaterial3'] ?? true);
       _theme.color = config['themeColor'] ?? "Blue";
 
-      upgradeNoticeV26 = config['upgradeNoticeV26'] ?? true;
-      _language = config['language'] == null 
-        ? null 
-        : Locale.fromSubtags(
-            languageCode: config['language'], 
-            scriptCode: config['languageScript']
-          );
+      upgradeNoticeV29 = config['upgradeNoticeV29'] ?? true;
+      _language = config['language'] == null
+          ? null
+          : Locale.fromSubtags(languageCode: config['language'], scriptCode: config['languageScript']);
       pipEnabled.value = config['pipEnabled'] ?? true;
       pipIcon.value = config['pipIcon'] ?? false;
-      headerExpanded = config['headerExpanded'] ?? true;
       headerViewMode = config['headerViewMode'] ?? "table";
       bottomNavigation = config['bottomNavigation'] ?? true;
       memoryCleanupThreshold = config['memoryCleanupThreshold'];
       autoReadEnabled = config['autoReadEnabled'] ?? true;
+      clearConfirm = config['clearConfirm'] ?? false;
 
       windowSize =
           config['windowSize'] == null ? null : Size(config['windowSize']['width'], config['windowSize']['height']);
@@ -222,6 +222,7 @@ class AppConfiguration {
       if (config['panelRatio'] != null) {
         panelRatio = config['panelRatio'];
       }
+      minimizeToTray = config['minimizeToTray'];
     } catch (e) {
       logger.e(e);
     }
@@ -251,12 +252,12 @@ class AppConfiguration {
       'mode': _theme.mode.name,
       'themeColor': _theme.color,
       'useMaterial3': _theme.useMaterial3,
-      'upgradeNoticeV26': upgradeNoticeV26,
+      'upgradeNoticeV29': upgradeNoticeV29,
       "language": _language?.languageCode,
       "languageScript": _language?.scriptCode,
-      "headerExpanded": headerExpanded,
       "headerViewMode": headerViewMode,
       "autoReadEnabled": autoReadEnabled,
+      "clearConfirm": clearConfirm,
       if (memoryCleanupThreshold != null) 'memoryCleanupThreshold': memoryCleanupThreshold,
       if (Platforms.isMobile()) 'pipEnabled': pipEnabled.value,
       if (Platforms.isMobile()) 'pipIcon': pipIcon.value ? true : null,
@@ -266,6 +267,7 @@ class AppConfiguration {
       if (Platforms.isDesktop())
         "windowPosition": windowPosition == null ? null : {"dx": windowPosition?.dx, "dy": windowPosition?.dy},
       if (Platforms.isDesktop()) 'panelRatio': panelRatio,
+      if (Platforms.isDesktop()) 'minimizeToTray': minimizeToTray,
     };
   }
 }

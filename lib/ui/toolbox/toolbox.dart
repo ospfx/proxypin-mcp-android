@@ -1,7 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:proxypin/l10n/app_localizations.dart';
 import 'package:proxypin/network/bin/server.dart';
@@ -11,13 +7,16 @@ import 'package:proxypin/ui/toolbox/qr_code_page.dart';
 import 'package:proxypin/ui/toolbox/regexp.dart';
 import 'package:proxypin/ui/toolbox/timestamp.dart';
 import 'package:proxypin/utils/platform.dart';
-import 'package:window_manager/window_manager.dart';
 
 import 'aes_page.dart';
 import 'cert_hash.dart';
 import 'encoder.dart';
 import 'js_run.dart';
+import 'json_viewer.dart';
+import 'text_diff.dart';
+import 'text_editor.dart';
 import 'websocket_request.dart';
+import 'xml_viewer.dart';
 
 class Toolbox extends StatefulWidget {
   final ProxyServer? proxyServer;
@@ -77,21 +76,57 @@ class _ToolboxState extends State<Toolbox> {
                       }
 
                       var size = MediaQuery.of(context).size;
-                      var ratio = 1.0;
-                      if (Platform.isWindows) {
-                        ratio = WindowManager.instance.getDevicePixelRatio();
-                      }
-
-                      final window = await DesktopMultiWindow.createWindow(jsonEncode(
-                        {'name': 'JavaScript'},
-                      ));
-                      window.setTitle('JavaScript');
-                      window
-                        ..setFrame(const Offset(100, 100) & Size(960 * ratio, size.height * ratio))
-                        ..center()
-                        ..show();
+                      MultiWindow.openWindow('JavaScript', 'JavaScript', size: Size(960, size.height));
                     },
                   ),
+                ],
+              ),
+              const Divider(thickness: 0.3),
+              Text(localizations.view, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+              Wrap(
+                spacing: 6,
+                children: [
+                  IconText(
+                      onTap: () async {
+                        if (Platforms.isMobile()) {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const JsonViewerPage()));
+                          return;
+                        }
+                        MultiWindow.openWindow("JSON Viewer", 'JsonViewerPage', size: const Size(780, 820));
+                      },
+                      icon: Icons.data_object,
+                      text: 'JSON'),
+                  IconText(
+                      onTap: () async {
+                        if (Platforms.isMobile()) {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const XmlViewerPage()));
+                          return;
+                        }
+                        MultiWindow.openWindow("XML Viewer", 'XmlViewerPage', size: const Size(900, 700));
+                      },
+                      icon: Icons.code,
+                      text: 'XML'),
+                  IconText(
+                      onTap: () async {
+                        if (Platforms.isMobile()) {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const TextDiffPage()));
+                          return;
+                        }
+                        MultiWindow.openWindow(localizations.textDiff, 'TextDiffPage', size: const Size(1100, 720));
+                      },
+                      icon: Icons.difference_outlined,
+                      text: localizations.textDiff),
+                  IconText(
+                      onTap: () async {
+                        if (Platforms.isMobile()) {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const TextEditorPage()));
+                          return;
+                        }
+                        MultiWindow.openWindow(localizations.textEditor, 'TextEditorPage', size: const Size(900, 800));
+                      },
+                      icon: Icons.note_alt_outlined,
+                      text: localizations.textEditor,
+                      tooltip: localizations.textEditor),
                 ],
               ),
               const Divider(thickness: 0.3),
@@ -180,7 +215,7 @@ class _ToolboxState extends State<Toolbox> {
                         }
                         MultiWindow.openWindow(localizations.regExp, 'RegExpPage', size: const Size(800, 720));
                       },
-                      icon: Icons.code,
+                      icon: Icons.find_in_page_outlined,
                       text: localizations.regExp,
                       tooltip: localizations.regExp),
                   IconText(
@@ -209,19 +244,8 @@ class _ToolboxState extends State<Toolbox> {
     }
 
     var size = MediaQuery.of(context).size;
-    var ratio = 1.0;
-    if (Platform.isWindows) {
-      ratio = WindowManager.instance.getDevicePixelRatio();
-    }
 
-    final window = await DesktopMultiWindow.createWindow(jsonEncode(
-      {'name': 'RequestEditor'},
-    ));
-    window.setTitle(localizations.httpRequest);
-    window
-      ..setFrame(const Offset(100, 100) & Size(960 * ratio, size.height * ratio))
-      ..center()
-      ..show();
+    MultiWindow.openWindow(localizations.httpRequest, "RequestEditor", size: Size(960, size.height));
   }
 }
 

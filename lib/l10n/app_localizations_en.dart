@@ -141,6 +141,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoStartupDescribe => 'Automatically start recording traffic when the program starts';
 
   @override
+  String get minimizeToTrayTitle => 'Minimize to tray on close';
+
+  @override
+  String get minimizeToTraySubtitle => 'Closing the window will keep ProxyPin running and hide it to the system tray.';
+
+  @override
+  String get trayClosePromptContent =>
+      'Closing the window will keep ProxyPin running in the system tray. Do you want to minimize it now?';
+
+  @override
+  String get trayCloseExitAnyway => 'Exit anyway';
+
+  @override
+  String get trayCloseMinimizeToTray => 'Minimize to tray';
+
+  @override
   String get copied => 'Copied to clipboard';
 
   @override
@@ -308,6 +324,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get click => 'Click';
 
   @override
+  String get loadRemoteScript => 'load remote script';
+
+  @override
   String get replace => 'Replace';
 
   @override
@@ -342,6 +361,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editReportServer => 'Edit Report Server';
+
+  @override
+  String get splitReport => 'Split Report';
 
   @override
   String get serverUrl => 'Server URL';
@@ -431,6 +453,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectAction => 'Select action';
 
   @override
+  String get select => 'Select';
+
+  @override
   String get copy => 'Copy';
 
   @override
@@ -450,6 +475,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copyAsPythonRequests => 'Copy as Python Requests';
+
+  @override
+  String get copyAsFetch => 'Copy as fetch';
 
   @override
   String get delete => 'Delete';
@@ -498,6 +526,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewExport => 'View Export';
+
+  @override
+  String get exportDomainHar => 'Export This Domain HAR';
 
   @override
   String get timeDesc => 'Descending by time';
@@ -715,7 +746,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareCurl => 'Share cURL Request';
 
   @override
-  String get shareRequestResponse => 'Share Request and Response';
+  String get requestResponse => 'Request and Response';
 
   @override
   String get captureDetail => 'Capture Detail';
@@ -765,11 +796,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get disconnect => 'Disconnect';
 
   @override
-  String get ipLayerProxy => 'IP Layer Proxy(Beta)';
+  String get ipLayerProxy => 'IP Layer Proxy';
 
   @override
-  String get ipLayerProxyDesc =>
-      'IP layer proxy can capture Flutter app requests, currently not very stable, welcome to submit PR';
+  String get ipLayerProxyDesc => 'IP layer proxy can capture Flutter app requests';
 
   @override
   String get inputAddress => 'Input Address';
@@ -806,12 +836,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pipIconDescribe => 'Show quick access to small window Icon';
 
   @override
-  String get headerExpanded => 'Headers Expanded';
-
-  @override
-  String get headerExpandedSubtitle => 'Details page Headers is expanded by default';
-
-  @override
   String get bottomNavigation => 'Bottom Navigation';
 
   @override
@@ -823,6 +847,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get memoryCleanupSubtitle =>
       'Automatically clean up requests on memory limit reached and keep 32 most recent after cleaning';
+
+  @override
+  String get clearConfirm => 'Confirm before clearing captured records';
+
+  @override
+  String get clearConfirmSubtitle => 'Show a confirmation dialog before clearing captured records';
 
   @override
   String get unlimited => 'Unlimited';
@@ -938,6 +968,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qrCode => 'QR Code';
 
   @override
+  String get jsonViewer => 'JSON Viewer';
+
+  @override
+  String get xmlViewer => 'XML Viewer';
+
+  @override
+  String get textDiff => 'Text Diff';
+
+  @override
+  String get textEditor => 'Text Editor';
+
+  @override
+  String get compare => 'Compare';
+
+  @override
+  String get diffOriginal => 'Original';
+
+  @override
+  String get diffChanged => 'Changed';
+
+  @override
+  String get diffIdentical => 'Two texts are identical';
+
+  @override
+  String diffSummary(int added, int removed) {
+    return '+$added −$removed';
+  }
+
+  @override
+  String get text => 'Text';
+
+  @override
+  String get format => 'Format';
+
+  @override
+  String get compact => 'Compact';
+
+  @override
+  String get wordWrap => 'Word Wrap';
+
+  @override
   String get scanQrCode => 'Scan QR Code';
 
   @override
@@ -986,6 +1057,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cipher => 'Cipher';
 
   @override
+  String get view => 'View';
+
+  @override
   String get appUpdateCheckVersion => 'Check for Updates';
 
   @override
@@ -1011,6 +1085,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appUpdateIgnoreBtnTxt => 'Ignore';
+
+  @override
+  String get appUpdateInstallNow => 'Install Now';
+
+  @override
+  String get appUpdateRetry => 'Retry';
+
+  @override
+  String get appUpdateBackgroundDownload => 'Download in background';
+
+  @override
+  String get appUpdateOpenDownloadPage => 'Open Download Page';
 
   @override
   String get requestMap => 'Request Map';
@@ -1042,9 +1128,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sponsorAfdian => 'AFDIAN';
-
-  @override
-  String get sponsorBuyMeCoffee => 'Buy Me a Coffee';
 
   @override
   String get privacyPolicy => 'Privacy Policy';
@@ -1155,4 +1238,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mcpInvalidPort => 'Invalid port number';
+  String get preview => 'Preview';
+
+  @override
+  String get environment => 'Environment';
+
+  @override
+  String get environmentVariables => 'Environment Variables';
+
+  @override
+  String get envGlobal => 'Global';
+
+  @override
+  String get envManage => 'Manage Environments…';
+
+  @override
+  String get envNone => 'No Environment';
+
+  @override
+  String get envDeleteConfirm => 'Delete this environment?';
+
+  @override
+  String get envEmptyHint => 'No variables yet. Click + to add.';
+
+  @override
+  String get envUsageHint => 'Reference variables as %s in rules, or read/write via context.env in scripts.';
 }

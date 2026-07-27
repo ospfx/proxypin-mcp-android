@@ -17,13 +17,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:proxypin/ui/component/multi_window_compat.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:proxypin/l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:image_pickers/image_pickers.dart';
+import 'package:proxypin/l10n/app_localizations.dart';
 import 'package:proxypin/network/components/manager/request_rewrite_manager.dart';
 import 'package:proxypin/network/components/manager/rewrite_rule.dart';
 import 'package:proxypin/network/http/content_type.dart';
@@ -36,14 +37,19 @@ import 'package:proxypin/ui/component/utils.dart';
 import 'package:proxypin/ui/desktop/setting/request_rewrite.dart';
 import 'package:proxypin/ui/mobile/setting/request_rewrite.dart';
 import 'package:proxypin/utils/crypto_body_decoder.dart';
+import 'package:proxypin/utils/css_formatter.dart';
+import 'package:proxypin/utils/html_formatter.dart';
+import 'package:proxypin/utils/js_formatter.dart';
 import 'package:proxypin/utils/lang.dart';
 import 'package:proxypin/utils/num.dart';
 import 'package:proxypin/utils/platform.dart';
+import 'package:proxypin/utils/xml_formatter.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../component/json/json_text.dart';
 import '../component/search/highlight_text.dart';
 import '../component/search/search_controller.dart';
+import '../component/search/virtualized_highlight_text.dart';
 import '../toolbox/encoder.dart';
 
 ///请求响应的body部分
@@ -115,7 +121,9 @@ class HttpBodyState extends State<HttpBodyWidget> {
     final message = widget.httpMessage;
     if (message == null) return;
     decoded = await CryptoBodyDecoder.maybeDecode(message);
-    if (mounted) setState(() {});
+    if (mounted && decoded != null && decoded!.hasText) {
+      setState(() {});
+    }
   }
 
   @override
@@ -383,7 +391,9 @@ class HttpBodyState extends State<HttpBodyWidget> {
             return;
           }
           var bytes = Uint8List.fromList(body);
-          if (Platforms.isMobile()) {
+          var extension = _imageExtension(bytes, bodyKey.currentState?.message?.headers.contentType);
+          var fileName = "image_${DateTime.now().millisecondsSinceEpoch}.$extension";
+          if (Platform.isIOS) {
             String? path = await ImagePickers.saveByteDataImageToGallery(bytes);
             if (path != null && mounted) {
               FlutterToastr.show(localizations.saveSuccess, context, duration: 2, rootNavigator: true);
@@ -391,17 +401,61 @@ class HttpBodyState extends State<HttpBodyWidget> {
             return;
           }
 
-          if (Platforms.isDesktop()) {
-            var fileName = "image_${DateTime.now().millisecondsSinceEpoch}.png";
-            String? path = (await FilePicker.platform.saveFile(fileName: fileName));
-            if (path == null) return;
-
-            await File(path).writeAsBytes(bytes);
-            if (mounted) {
-              FlutterToastr.show(localizations.saveSuccess, context, duration: 2);
-            }
+          String? path = await FilePicker.saveFile(fileName: fileName, bytes: bytes, type: FileType.image);
+          if (path != null && mounted) {
+            FlutterToastr.show(localizations.saveSuccess, context, duration: 2, rootNavigator: true);
           }
         });
+  }
+
+  String _imageExtension(Uint8List bytes, String? contentType) {
+    var type = contentType?.toLowerCase() ?? '';
+    if (type.contains('jpeg') || type.contains('jpg')) return 'jpg';
+    if (type.contains('png')) return 'png';
+    if (type.contains('webp')) return 'webp';
+    if (type.contains('gif')) return 'gif';
+    if (type.contains('bmp')) return 'bmp';
+    if (type.contains('svg')) return 'svg';
+
+    if (bytes.length >= 12 &&
+        bytes[0] == 0x52 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x46 &&
+        bytes[8] == 0x57 &&
+        bytes[9] == 0x45 &&
+        bytes[10] == 0x42 &&
+        bytes[11] == 0x50) {
+      return 'webp';
+    }
+    if (bytes.length >= 8 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47 &&
+        bytes[4] == 0x0D &&
+        bytes[5] == 0x0A &&
+        bytes[6] == 0x1A &&
+        bytes[7] == 0x0A) {
+      return 'png';
+    }
+    if (bytes.length >= 3 && bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) {
+      return 'jpg';
+    }
+    if (bytes.length >= 6 &&
+        bytes[0] == 0x47 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x38 &&
+        (bytes[4] == 0x37 || bytes[4] == 0x39) &&
+        bytes[5] == 0x61) {
+      return 'gif';
+    }
+    if (bytes.length >= 2 && bytes[0] == 0x42 && bytes[1] == 0x4D) {
+      return 'bmp';
+    }
+
+    return 'png';
   }
 
   ///展示请求重写
@@ -455,7 +509,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
       ));
       window
         ..setTitle(widget.httpMessage is HttpRequest ? localizations.requestBody : localizations.responseBody)
-        ..setFrame(const Offset(100, 100) & Size(800 * ratio, size.height * ratio))
+        ..setSize(Size(800 * ratio, size.height * ratio))
         ..center()
         ..show();
       return;
@@ -486,7 +540,31 @@ class _Body extends StatefulWidget {
   }
 }
 
+// Top-level isolate function for compute()
+// Accepts a Map<String, String> with keys: 'type' and 'body'.
+String _formatTextBodyIsolate(Map<String, String> args) {
+  final typeName = args['type'] ?? 'text';
+  final body = args['body'] ?? '';
+  final type = ViewType.values.firstWhere((v) => v.name == typeName, orElse: () => ViewType.text);
+
+  try {
+    if (type == ViewType.formUrl) return Uri.decodeFull(body);
+    if (type == ViewType.html) return HTML.pretty(body);
+    if (type == ViewType.xml) return XML.pretty(body);
+    if (type == ViewType.css) return CSS.pretty(body);
+    if (type == ViewType.js) return JS.pretty(body);
+    if (type == ViewType.jsonText || type == ViewType.json) {
+      final jsonObject = json.decode(body);
+      return const JsonEncoder.withIndent("  ").convert(jsonObject);
+    }
+  } catch (_) {}
+
+  return body;
+}
+
 class _BodyState extends State<_Body> {
+  static const int _virtualizedThreshold = 100000;
+
   late ViewType viewType;
   HttpMessage? message;
 
@@ -509,43 +587,83 @@ class _BodyState extends State<_Body> {
     return _getBody(viewType);
   }
 
+  HttpMessage? _effectiveMessage(HttpBodyState? parent) {
+    if (parent?.showDecoded == true && parent?.decoded != null && message != null) {
+      return _DecodedHttpMessage(message!, parent!.decoded!);
+    }
+    return message;
+  }
+
+  Future<String> _formatTextBody(ViewType type, String body) async {
+    try {
+      if (type == ViewType.formUrl) {
+        return Uri.decodeFull(body);
+      }
+
+      final heavyTypes = {
+        ViewType.html,
+        ViewType.xml,
+        ViewType.css,
+        ViewType.js,
+        ViewType.json,
+        ViewType.jsonText,
+      };
+
+      // For small bodies avoid isolate overhead
+      if (!heavyTypes.contains(type) || body.length < 10000) {
+        try {
+          if (type == ViewType.html) return HTML.pretty(body);
+          if (type == ViewType.xml) return XML.pretty(body);
+          if (type == ViewType.css) return CSS.pretty(body);
+          if (type == ViewType.js) return JS.pretty(body);
+          if (type == ViewType.jsonText || type == ViewType.json) {
+            final jsonObject = json.decode(body);
+            return const JsonEncoder.withIndent("  ").convert(jsonObject);
+          }
+        } catch (_) {
+          return body;
+        }
+        return body;
+      }
+
+      // Use compute to perform heavy formatting in an isolate
+      final result = await compute(_formatTextBodyIsolate, {'type': type.name, 'body': body});
+      return result;
+    } catch (_) {
+      return body;
+    }
+  }
+
   Future<String?> getBody() async {
     final parent = context.findAncestorStateOfType<HttpBodyState>();
-    if (parent?.showDecoded == true && parent?.decoded?.text != null) {
-      return parent!.decoded!.text;
+    final currentMessage = _effectiveMessage(parent);
+
+    if (currentMessage?.isWebSocket == true) {
+      return currentMessage?.messages.map((e) => e.payloadDataAsString).join("\n");
     }
 
-    if (message?.isWebSocket == true) {
-      return message?.messages.map((e) => e.payloadDataAsString).join("\n");
-    }
-
-    if (message == null || message?.body == null) {
+    if (currentMessage == null || currentMessage.body == null) {
       return null;
     }
 
     if (viewType == ViewType.hex) {
-      return message!.body!.map(intToHex).join(" ");
+      return currentMessage.body!.map(intToHex).join(" ");
     }
 
-    try {
-      if (viewType == ViewType.formUrl) {
-        return Uri.decodeFull(message!.bodyAsString);
-      }
+    final body = parent?.showDecoded == true && parent?.decoded?.text != null
+        ? parent!.decoded!.text!
+        : await currentMessage.decodeBodyString();
 
-      if (viewType == ViewType.jsonText || viewType == ViewType.json) {
-        //json格式化
-        var jsonObject = json.decode(await message!.decodeBodyString());
-        return const JsonEncoder.withIndent("  ").convert(jsonObject);
-      }
-    } catch (_) {}
-    return message!.decodeBodyString();
+    if (viewType == ViewType.text) {
+      return body;
+    }
+
+    return await _formatTextBody(viewType, body);
   }
 
   Widget _getBody(ViewType type) {
     final parent = context.findAncestorStateOfType<HttpBodyState>();
-    final message = parent?.showDecoded == true && parent?.decoded != null
-        ? _DecodedHttpMessage(widget.message!, parent!.decoded!)
-        : widget.message;
+    final message = _effectiveMessage(parent);
 
     if (message?.isWebSocket == true ||
         (message?.contentType == ContentType.sse && message?.messages.isNotEmpty == true)) {
@@ -592,7 +710,7 @@ class _BodyState extends State<_Body> {
 
     if (type == ViewType.formUrl) {
       return HighlightTextWidget(
-          text: Uri.decodeFull(message.getBodyString()),
+          text: _formatTextBodyIsolate({'type': type.name, 'body': message.getBodyString()}),
           searchController: widget.searchController,
           contextMenuBuilder: contextMenu);
     }
@@ -614,8 +732,7 @@ class _BodyState extends State<_Body> {
               colorTheme: ColorTheme.of(context), searchController: widget.searchController);
         }
 
-        return HighlightTextWidget(
-            text: body, searchController: widget.searchController, contextMenuBuilder: contextMenu);
+        return _buildTextBodyViewer(type, body, message: message);
       } catch (e) {
         logger.e(e, stackTrace: StackTrace.current);
       }
@@ -623,6 +740,58 @@ class _BodyState extends State<_Body> {
       return HighlightTextWidget(
           text: body, searchController: widget.searchController, contextMenuBuilder: contextMenu);
     });
+  }
+
+  String? _languageForViewType(ViewType type, HttpMessage? message) {
+    switch (type) {
+      case ViewType.html:
+        return 'html';
+      case ViewType.xml:
+        return 'xml';
+      case ViewType.css:
+        return 'css';
+      case ViewType.js:
+        return 'javascript';
+      case ViewType.json:
+      case ViewType.jsonText:
+        return 'json';
+      default:
+        return null;
+    }
+  }
+
+  Widget _buildTextBodyViewer(
+    ViewType type,
+    String text, {
+    HttpMessage? message,
+  }) {
+    final language = _languageForViewType(type, message);
+    final showVirtualized = text.length > _virtualizedThreshold;
+
+    // Format asynchronously (may use compute)
+    final futureFormatted = _formatTextBody(type, text);
+
+    return futureWidget(
+      initialData: text.substring(0, min(text.length, 10000)), // Show a preview while formatting
+      futureFormatted,
+      (formattedText) {
+        if (showVirtualized) {
+          return VirtualizedHighlightText(
+            text: formattedText,
+            language: language,
+            contextMenuBuilder: contextMenu,
+            searchController: widget.searchController,
+            scrollController: widget.scrollController,
+          );
+        }
+
+        return HighlightTextWidget(
+            language: language,
+            text: formattedText,
+            searchController: widget.searchController,
+            contextMenuBuilder: contextMenu);
+      },
+    );
   }
 }
 
@@ -643,6 +812,13 @@ class Tabs {
 
     if (contentType == ContentType.json) {
       tabs.list.add(ViewType.jsonText);
+    }
+
+    if (contentType == ContentType.html ||
+        contentType == ContentType.xml ||
+        contentType == ContentType.js ||
+        contentType == ContentType.css) {
+      tabs.list.add(ViewType.text);
     }
 
     tabs.list.add(ViewType.of(contentType) ?? ViewType.text);
@@ -672,6 +848,7 @@ enum ViewType {
   json("JSON"),
   jsonText("JSON Text"),
   html("HTML"),
+  xml("XML"),
   image("Image"),
   video("Video"),
   css("CSS"),

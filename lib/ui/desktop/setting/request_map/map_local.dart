@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-import 'dart:io';
-
-import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,7 +27,7 @@ import 'package:proxypin/ui/component/state_component.dart';
 /// @author wanghongen
 /// 2023/10/8
 class DesktopMapLocal extends StatefulWidget {
-  final int? windowId;
+  final String? windowId;
   final RequestMapItem? item;
 
   const DesktopMapLocal({super.key, this.item, this.windowId});
@@ -123,7 +120,7 @@ class MapLocaleState extends State<DesktopMapLocal> {
 
   //body
   Widget body() {
-    bool isEN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'en');
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
 
     return Obx(() => Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.center, children: [
@@ -132,7 +129,7 @@ class MapLocaleState extends State<DesktopMapLocal> {
             SizedBox(
                 width: 90,
                 child: DropdownButtonFormField<String>(
-                    value: bodyType.value,
+                    initialValue: bodyType.value,
                     focusColor: Colors.transparent,
                     itemHeight: 48,
                     decoration: const InputDecoration(
@@ -140,7 +137,7 @@ class MapLocaleState extends State<DesktopMapLocal> {
                     items: ReplaceBodyType.values
                         .map((e) => DropdownMenuItem(
                             value: e.name,
-                            child: Text(isEN ? e.name.toUpperCase() : e.label,
+                            child: Text(!isCN ? e.name.toUpperCase() : e.label,
                                 style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))))
                         .toList(),
                     onChanged: (val) => bodyType.value = val ?? ReplaceBodyType.text.name)),
@@ -172,14 +169,8 @@ class MapLocaleState extends State<DesktopMapLocal> {
           const SizedBox(width: 10),
           FilledButton(
               onPressed: () async {
-                String? path;
-                if (Platform.isMacOS) {
-                  path = await DesktopMultiWindow.invokeMethod(0, "pickFiles");
-                  if (widget.windowId != null) WindowController.fromWindowId(widget.windowId!).show();
-                } else {
-                  FilePickerResult? result = await FilePicker.platform.pickFiles();
-                  path = result?.files.single.path;
-                }
+                FilePickerResult? result = await FilePicker.pickFiles();
+                final path = result?.files.single.path;
 
                 if (path == null) {
                   return;

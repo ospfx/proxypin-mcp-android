@@ -18,9 +18,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:proxypin/network/bin/server.dart';
+import 'package:proxypin/ui/component/utils.dart';
 import 'package:proxypin/ui/desktop/toolbar/phone_connect.dart';
+import 'package:proxypin/ui/desktop/toolbar/environment_switcher.dart';
 import 'package:proxypin/ui/desktop/setting/setting.dart';
 import 'package:proxypin/ui/desktop/ssl/ssl.dart';
+import 'package:proxypin/ui/configuration.dart';
 import 'package:proxypin/ui/launch/launch.dart';
 import 'package:proxypin/utils/ip.dart';
 import 'package:window_manager/window_manager.dart';
@@ -45,6 +48,17 @@ class Toolbar extends StatefulWidget {
 class _ToolbarState extends State<Toolbar> {
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
+  Future<void> _onClear() async {
+    if (AppConfiguration.current?.clearConfirm != true) {
+      widget.requestListStateKey.currentState?.clean();
+      return;
+    }
+
+    showConfirmDialog(context, title: localizations.clearConfirm, onConfirm: () {
+      widget.requestListStateKey.currentState?.clean();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +66,10 @@ class _ToolbarState extends State<Toolbar> {
   }
 
   bool onKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) {
+      return false;
+    }
+
     if (HardwareKeyboard.instance.isLogicalKeyPressed(LogicalKeyboardKey.escape)) {
       if (ModalRoute.of(context)?.isCurrent == false) {
         Navigator.maybePop(context);
@@ -66,6 +84,7 @@ class _ToolbarState extends State<Toolbar> {
 
     if (HardwareKeyboard.instance.isMetaPressed && event.logicalKey == LogicalKeyboardKey.keyQ) {
       windowManager.close();
+      windowManager.destroy();
       return true;
     }
 
@@ -84,12 +103,7 @@ class _ToolbarState extends State<Toolbar> {
       Padding(padding: EdgeInsets.only(left: Platform.isMacOS ? 83 : 20)),
       SocketLaunch(proxyServer: widget.proxyServer, startup: widget.proxyServer.configuration.startup),
       const Padding(padding: EdgeInsets.only(left: 18)),
-      IconButton(
-          tooltip: localizations.clear,
-          icon: const Icon(Icons.delete_outline, size: 21),
-          onPressed: () {
-            widget.requestListStateKey.currentState?.clean();
-          }),
+      IconButton(tooltip: localizations.clear, icon: const Icon(Icons.delete_outline, size: 21), onPressed: _onClear),
       const Padding(padding: EdgeInsets.only(left: 18)),
       SslWidget(proxyServer: widget.proxyServer), // SSL配置
       const Padding(padding: EdgeInsets.only(left: 18)),
@@ -102,6 +116,8 @@ class _ToolbarState extends State<Toolbar> {
             final ips = await localIps(readCache: false);
             phoneConnect(ips, widget.proxyServer.port);
           }),
+      const Padding(padding: EdgeInsets.only(left: 18)),
+      const EnvironmentSwitcher(), // 环境变量切换器
       const Padding(padding: EdgeInsets.only(left: 10)),
     ]);
   }

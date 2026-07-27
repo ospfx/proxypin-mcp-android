@@ -63,16 +63,16 @@ class _FavoritesState extends State<MobileFavorites> {
     final favorites = await FavoriteStorage.favorites;
     final json = FavoriteStorage.toJson(favorites);
     final bytes = utf8.encode(json);
-    final path = await FilePicker.platform.saveFile(fileName: 'favorites.json', bytes: bytes);
+    final path = await FilePicker.saveFile(fileName: 'favorites.json', bytes: bytes);
     if (path == null) return;
     if (mounted) FlutterToastr.show(localizations.exportSuccess, context);
   }
 
   Future<String?> _materializePickedFile(PlatformFile file) async {
     if (file.path != null) return file.path!;
-    if (file.bytes == null) return null;
+    final bytes = await file.readAsBytes();
     final tmp = await File('${Directory.systemTemp.path}/${file.name}').create();
-    await tmp.writeAsBytes(file.bytes!, flush: true);
+    await tmp.writeAsBytes(bytes, flush: true);
     return tmp.path;
   }
 
@@ -97,8 +97,8 @@ class _FavoritesState extends State<MobileFavorites> {
                   tooltip: localizations.import,
                   icon: const Icon(Icons.download_for_offline_outlined, size: 20),
                   onPressed: () async {
-                    final result = await FilePicker.platform
-                        .pickFiles(type: FileType.custom, allowedExtensions: ['json', 'har'], withData: true);
+                    final result = await FilePicker.pickFiles(
+                        type: FileType.custom, allowedExtensions: ['json', 'har']);
                     final file = result?.files.isNotEmpty == true ? result!.files.first : null;
                     if (file == null) return;
                     final path = await _materializePickedFile(file);
@@ -208,6 +208,16 @@ class _FavoriteItemState extends State<_FavoriteItem> {
             minLeadingWidth: 25,
             leading: getIcon(response),
             title: title,
+            trailing: request.isWebSocket
+                ? Text(
+                    'WS',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  )
+                : null,
             subtitle: Text.rich(
                 maxLines: 1,
                 TextSpan(children: [
@@ -243,7 +253,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
                 alignment: Alignment.centerLeft,
                 child: Padding(
                     padding: EdgeInsets.only(left: 20, top: 5),
-                    child: Text(localizations.selectAction, style: Theme.of(context).textTheme.bodyLarge)),
+                    child: Text(localizations.select, style: Theme.of(context).textTheme.bodyLarge)),
               ),
               //copy
               menuItem(
@@ -424,7 +434,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
     return TextButton.icon(
         onPressed: onPressed,
         label: Text(label, style: style),
-        icon: Icon(icon, size: iconSize, color: theme.colorScheme.primary.withOpacity(0.65)));
+        icon: Icon(icon, size: iconSize, color: theme.colorScheme.primary.withValues(alpha: 0.65)));
   }
 
   Widget menuItem({required Widget left, required Widget right}) {

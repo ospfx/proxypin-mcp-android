@@ -17,16 +17,17 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:proxypin/ui/component/multi_window_compat.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:code_forge/code_forge.dart';
 import 'package:proxypin/l10n/app_localizations.dart';
-import 'package:flutter_highlight/themes/monokai-sublime.dart';
+import 'package:re_highlight/styles/monokai-sublime.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
-import 'package:highlight/languages/javascript.dart';
+import 'package:proxypin/ui/component/search/finder.dart';
+import 'package:re_highlight/languages/javascript.dart';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:proxypin/network/components/manager/script_manager.dart';
@@ -35,6 +36,8 @@ import 'package:proxypin/ui/component/multi_window.dart';
 import 'package:proxypin/ui/component/utils.dart';
 import 'package:proxypin/ui/component/widgets.dart';
 import 'package:proxypin/utils/lang.dart';
+import 'package:proxypin/utils/platform.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 bool _refresh = false;
 
@@ -43,7 +46,7 @@ Future<void> _refreshScript({bool force = false}) async {
   if (force) {
     _refresh = false;
     await ScriptManager.instance.then((manager) => manager.flushConfig());
-    await DesktopMultiWindow.invokeMethod(0, "refreshScript");
+    await DesktopMultiWindow.invokeMainWindowMethod("refreshScript");
   }
   if (_refresh) {
     return;
@@ -52,14 +55,14 @@ Future<void> _refreshScript({bool force = false}) async {
   Future.delayed(const Duration(milliseconds: 1000), () async {
     _refresh = false;
     await ScriptManager.instance.then((manager) => manager.flushConfig());
-    await DesktopMultiWindow.invokeMethod(0, "refreshScript");
+    await DesktopMultiWindow.invokeMainWindowMethod("refreshScript");
   });
 }
 
 /// @author wanghongen
 /// 2023/10/8
 class ScriptWidget extends StatefulWidget {
-  final int windowId;
+  final String windowId;
 
   const ScriptWidget({super.key, required this.windowId});
 
@@ -104,7 +107,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Theme.of(context).dialogBackgroundColor,
+        backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
         appBar: AppBar(
             title: Text(localizations.script, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             toolbarHeight: 36,
@@ -167,17 +170,8 @@ class _ScriptWidgetState extends State<ScriptWidget> {
 
   //导入js
   Future<void> import() async {
-    String? path;
-    if (Platform.isMacOS) {
-      path = await DesktopMultiWindow.invokeMethod(0, "pickFiles", {
-        "allowedExtensions": ['json']
-      });
-      WindowController.fromWindowId(widget.windowId).show();
-    } else {
-      FilePickerResult? result =
-          await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
-      path = result?.files.single.path;
-    }
+    FilePickerResult? result = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+    final path = result?.files.single.path;
 
     if (path == null) {
       return;
@@ -219,7 +213,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
 }
 
 class ScriptConsoleWidget extends StatefulWidget {
-  final int windowId;
+  final String windowId;
 
   const ScriptConsoleWidget({super.key, required this.windowId});
 
@@ -237,7 +231,7 @@ class _ScriptConsoleState extends State<ScriptConsoleWidget> {
   @override
   void initState() {
     super.initState();
-    DesktopMultiWindow.invokeMethod(0, "registerConsoleLog", widget.windowId);
+    DesktopMultiWindow.invokeMainWindowMethod("registerConsoleLog", widget.windowId);
     DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
       if (call.method == 'consoleLog') {
         setState(() {
@@ -261,7 +255,7 @@ class _ScriptConsoleState extends State<ScriptConsoleWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Theme.of(context).dialogBackgroundColor,
+        backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
         appBar: AppBar(
             title: Text(localizations.logger, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             actions: [
@@ -289,7 +283,7 @@ class _ScriptConsoleState extends State<ScriptConsoleWidget> {
             toolbarHeight: 36,
             centerTitle: true),
         body: Container(
-            decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.3))),
+            decoration: BoxDecoration(border: Border.all(color: Colors.grey.withValues(alpha: 0.3))),
             margin: const EdgeInsets.all(5),
             padding: const EdgeInsets.all(5),
             child: ListView.builder(
@@ -349,7 +343,7 @@ class ScriptEdit extends StatefulWidget {
 }
 
 class _ScriptEditState extends State<ScriptEdit> {
-  late CodeController script;
+  late CodeForgeController script;
   late TextEditingController nameController;
   late List<TextEditingController> urlControllers;
   late TextEditingController remoteUrlController;
@@ -362,7 +356,8 @@ class _ScriptEditState extends State<ScriptEdit> {
     if (_fetchingRemoteScript.value) return;
     final remoteUrl = remoteUrlController.text.trim();
     if (remoteUrl.isEmpty) {
-      FlutterToastr.show("${localizations.remoteUrl} ${localizations.cannotBeEmpty}", context, position: FlutterToastr.top);
+      FlutterToastr.show("${localizations.remoteUrl} ${localizations.cannotBeEmpty}", context,
+          position: FlutterToastr.top);
       return;
     }
 
@@ -400,10 +395,10 @@ class _ScriptEditState extends State<ScriptEdit> {
   @override
   void initState() {
     super.initState();
-    script = CodeController(language: javascript, text: widget.script ?? ScriptManager.template);
+    _useRemote = widget.fromRemoteUrl || ((widget.scriptItem?.remoteUrl ?? '').trim().isNotEmpty);
+    script = CodeForgeController()..text = widget.script ?? (_useRemote ? '' : ScriptManager.template);
     nameController = TextEditingController(text: widget.scriptItem?.name ?? widget.title);
     remoteUrlController = TextEditingController(text: widget.scriptItem?.remoteUrl ?? '');
-    _useRemote = widget.fromRemoteUrl || ((widget.scriptItem?.remoteUrl ?? '').trim().isNotEmpty);
     final urls = widget.scriptItem?.urls ??
         (widget.urls != null && widget.urls!.isNotEmpty
             ? widget.urls!
@@ -441,12 +436,9 @@ class _ScriptEditState extends State<ScriptEdit> {
             text: localizations.useGuide,
             style: const TextStyle(color: Colors.blue, fontSize: 14),
             recognizer: TapGestureRecognizer()
-              ..onTap = () => DesktopMultiWindow.invokeMethod(
-                  0,
-                  "launchUrl",
-                  isCN
-                      ? 'https://gitee.com/wanghongenpin/proxypin/wikis/%E8%84%9A%E6%9C%AC'
-                      : 'https://github.com/wanghongenpin/proxypin/wiki/Script'))),
+              ..onTap = () => launchUrl(Uri.parse(isCN
+                  ? 'https://gitee.com/wanghongenpin/proxypin/wikis/%E8%84%9A%E6%9C%AC'
+                  : 'https://github.com/wanghongenpin/proxypin/wiki/Script')))),
         const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
       ]),
       contentPadding: const EdgeInsets.only(left: 15, right: 15),
@@ -470,7 +462,8 @@ class _ScriptEditState extends State<ScriptEdit> {
               final remoteUrl = _useRemote ? remoteUrlController.text.trim() : '';
               final hasRemote = remoteUrl.isNotEmpty;
               if (_useRemote && !hasRemote) {
-                FlutterToastr.show("${localizations.remoteUrl} ${localizations.cannotBeEmpty}", context, position: FlutterToastr.top);
+                FlutterToastr.show("${localizations.remoteUrl} ${localizations.cannotBeEmpty}", context,
+                    position: FlutterToastr.top);
                 return;
               }
 
@@ -499,10 +492,10 @@ class _ScriptEditState extends State<ScriptEdit> {
             children: [
               // Name section
               Card(
-                  color: Theme.of(context).colorScheme.surfaceContainerLow.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                      side: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.4)),
+                      side: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.4)),
                       borderRadius: BorderRadius.circular(8)),
                   child: Padding(
                       padding: const EdgeInsets.all(10),
@@ -510,10 +503,10 @@ class _ScriptEditState extends State<ScriptEdit> {
 
               // URLs section
               Card(
-                  color: Theme.of(context).colorScheme.surfaceContainerLow.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                      side: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.4)),
+                      side: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.4)),
                       borderRadius: BorderRadius.circular(8)),
                   child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -568,10 +561,10 @@ class _ScriptEditState extends State<ScriptEdit> {
 
               // Script section
               Card(
-                  color: Theme.of(context).colorScheme.surfaceContainerLow.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                      side: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.4)),
+                      side: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.4)),
                       borderRadius: BorderRadius.circular(8)),
                   child: Padding(
                       padding: const EdgeInsets.all(6),
@@ -626,17 +619,18 @@ class _ScriptEditState extends State<ScriptEdit> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Obx(() => FilledButton.tonal(
-                                  style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
-                                  onPressed: _fetchingRemoteScript.value ? null : _fetchRemoteScript,
-                                  child: _fetchingRemoteScript.value
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        )
-                                      : Text(localizations.view),
+                            Obx(() => SizedBox(
+                                  height: 34,
+                                  child: FilledButton.tonalIcon(
+                                      onPressed: _fetchingRemoteScript.value ? null : _fetchRemoteScript,
+                                      icon: _fetchingRemoteScript.value
+                                          ? const SizedBox(
+                                              width: 14,
+                                              height: 14,
+                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                            )
+                                          : const Icon(Icons.cloud_download_outlined, size: 16),
+                                      label: Text(localizations.view)),
                                 )),
                           ],
 
@@ -652,29 +646,63 @@ class _ScriptEditState extends State<ScriptEdit> {
                           Tooltip(
                               message: 'Reset',
                               child: IconButton(
-                                  icon: const Icon(Icons.settings_backup_restore, size: 22),
-                                  onPressed: _resetScript)),
+                                  icon: const Icon(Icons.settings_backup_restore, size: 22), onPressed: _resetScript)),
                           const SizedBox(width: 5)
                         ]),
                         const SizedBox(height: 8),
                         SizedBox(
-                            width: 850,
-                            height: 380,
-                            child: CodeTheme(
-                                data: CodeThemeData(styles: monokaiSublimeTheme),
-                                child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(6),
-                                    child: Container(
-                                        decoration: BoxDecoration(
-                                            color: Colors.grey.shade900,
-                                            border: Border.all(color: Colors.grey.withOpacity(0.2))),
-                                        child: SingleChildScrollView(
-                                            child: CodeField(
-                                          readOnly: _useRemote,
-                                          textStyle: const TextStyle(fontSize: 13, color: Colors.white),
-                                          controller: script,
-                                          gutterStyle: const GutterStyle(width: 50, margin: 0),
-                                        ))))))
+                          width: 850,
+                          height: 380,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade900,
+                                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                              ),
+                              child: Stack(
+                                children: [
+                                  CodeForge(
+                                    controller: script,
+                                    language: langJavascript,
+                                    editorTheme: monokaiSublimeTheme,
+                                    readOnly: _useRemote,
+                                    autoFocus: true,
+                                    enableGuideLines: false,
+                                    finderBuilder: (c, controller) => FindPanelView(controller: controller),
+                                    textStyle: const TextStyle(fontSize: 13, color: Colors.white),
+                                  ),
+                                  if (_useRemote && script.text.trim().isEmpty)
+                                    Positioned.fill(
+                                      child: Center(
+                                        child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(alpha: 0.28),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: RichText(
+                                                text: TextSpan(
+                                              style: const TextStyle(fontSize: 12, color: Colors.white70),
+                                              children: [
+                                                TextSpan(text: '${localizations.click} “'),
+                                                TextSpan(
+                                                    text: localizations.preview,
+                                                    style: const TextStyle(
+                                                        color: Colors.blue,
+                                                        fontSize: 12,
+                                                        decoration: TextDecoration.underline),
+                                                    recognizer: TapGestureRecognizer()..onTap = _fetchRemoteScript),
+                                                TextSpan(text: '” ${localizations.loadRemoteScript}'),
+                                              ],
+                                            ))),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
                       ])))
             ],
           )),
@@ -708,7 +736,7 @@ class _ScriptEditState extends State<ScriptEdit> {
 
 /// 脚本列表
 class ScriptList extends StatefulWidget {
-  final int windowId;
+  final String windowId;
   final List<ScriptItem> scripts;
 
   const ScriptList({super.key, required this.scripts, required this.windowId});
@@ -755,7 +783,7 @@ class _ScriptListState extends State<ScriptList> {
             child: Container(
                 padding: const EdgeInsets.only(top: 10),
                 height: 630,
-                decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
+                decoration: BoxDecoration(border: Border.all(color: Colors.grey.withValues(alpha: 0.2))),
                 child: SingleChildScrollView(
                     child: Column(children: [
                   Row(mainAxisAlignment: MainAxisAlignment.start, children: [
@@ -782,7 +810,7 @@ class _ScriptListState extends State<ScriptList> {
           // },
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
-          hoverColor: primaryColor.withOpacity(0.3),
+          hoverColor: primaryColor.withValues(alpha: 0.3),
           onDoubleTap: () => showEdit(index),
           onSecondaryTapDown: (details) => showMenus(details, index),
           onHover: (hover) {
@@ -808,9 +836,9 @@ class _ScriptListState extends State<ScriptList> {
           },
           child: Container(
               color: selected.contains(index)
-                  ? primaryColor.withOpacity(0.6)
+                  ? primaryColor.withValues(alpha: 0.6)
                   : index.isEven
-                      ? Colors.grey.withOpacity(0.1)
+                      ? Colors.grey.withValues(alpha: 0.1)
                       : null,
               height: 30,
               padding: const EdgeInsets.all(5),
@@ -921,16 +949,11 @@ class _ScriptListState extends State<ScriptList> {
     if (indexes.isEmpty) return;
     //文件名称
     String fileName = 'proxypin-scripts.json';
-    String? path;
-    if (Platform.isMacOS) {
-      path = await DesktopMultiWindow.invokeMethod(0, "saveFile", {"fileName": fileName});
-      WindowController.fromWindowId(widget.windowId).show();
-    } else {
-      path = await FilePicker.platform.saveFile(fileName: fileName);
-    }
+    String? path = await Platforms.saveFileAdaptive(fileName: fileName);
     if (path == null) {
       return;
     }
+
     var scriptManager = await ScriptManager.instance;
     List<dynamic> json = [];
     for (var idx in indexes) {

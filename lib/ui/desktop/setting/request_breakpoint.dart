@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:proxypin/ui/component/multi_window_compat.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +17,7 @@ import '../../component/http_method_popup.dart';
 
 class RequestBreakpointPage extends StatefulWidget {
   final RequestBreakpointManager manager;
-  final int? windowId;
+  final String? windowId;
 
   const RequestBreakpointPage({super.key, this.windowId, required this.manager});
 
@@ -38,7 +38,7 @@ class _RequestBreakpointPageState extends State<RequestBreakpointPage> {
 
   Future<void> _refreshConfig() async {
     if (widget.windowId != null) {
-      await DesktopMultiWindow.invokeMethod(0, "refreshRequestBreakpoint");
+      await DesktopMultiWindow.invokeMainWindowMethod("refreshRequestBreakpoint");
     }
   }
 
@@ -48,17 +48,8 @@ class _RequestBreakpointPageState extends State<RequestBreakpointPage> {
   }
 
   Future<void> _import() async {
-    String? path;
-    if (Platform.isMacOS) {
-      path = await DesktopMultiWindow.invokeMethod(0, "pickFiles", {
-        "allowedExtensions": ['json']
-      });
-      if (widget.windowId != null) WindowController.fromWindowId(widget.windowId!).show();
-    } else {
-      FilePickerResult? result =
-          await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
-      path = result?.files.single.path;
-    }
+    FilePickerResult? result = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+    final path = result?.files.single.path;
     if (path == null) return;
     File file = File(path);
     try {
@@ -82,18 +73,10 @@ class _RequestBreakpointPageState extends State<RequestBreakpointPage> {
   Future<void> _export(List<RequestBreakpointRule> exportRules) async {
     if (exportRules.isEmpty) return;
 
-    String? outputFile;
-    if (Platform.isMacOS) {
-      outputFile = await DesktopMultiWindow.invokeMethod(0, "saveFile", {"fileName": 'request_breakpoint_rules.json'});
-      if (widget.windowId != null) WindowController.fromWindowId(widget.windowId!).show();
-    } else {
-      outputFile = await FilePicker.platform.saveFile(fileName: 'request_breakpoint_rules.json');
-    }
+    var json = exportRules.map((e) => e.toJson()).toList();
+    String? outputFile = await FilePicker.saveFile(fileName: 'request_breakpoint_rules.json', bytes: utf8.encode(jsonEncode(json)));
     if (outputFile == null) return;
-    File file = File(outputFile);
     try {
-      var json = exportRules.map((e) => e.toJson()).toList();
-      await file.writeAsString(jsonEncode(json));
       if (mounted) CustomToast.success(localizations.exportSuccess).show(context);
     } catch (e) {
       if (mounted) CustomToast.error(localizations.exportFailed).show(context);
@@ -136,7 +119,7 @@ class _RequestBreakpointPageState extends State<RequestBreakpointPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isEN = Localizations.localeOf(context).languageCode == 'en';
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
 
     return Scaffold(
         backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
@@ -150,7 +133,7 @@ class _RequestBreakpointPageState extends State<RequestBreakpointPage> {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
                     SizedBox(
-                        width: isEN ? 280 : 250,
+                        width: isCN ? 250 : 280,
                         child: ListTile(
                             title: Text("${localizations.enable} ${localizations.breakpoint}"),
                             contentPadding: const EdgeInsets.only(left: 2),

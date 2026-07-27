@@ -18,7 +18,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:proxypin/ui/component/multi_window_compat.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -36,7 +36,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 ///二维码
 ///@author Hongen Wang
 class QrCodePage extends StatefulWidget {
-  final int? windowId;
+  final String? windowId;
 
   const QrCodePage({super.key, this.windowId});
 
@@ -114,7 +114,7 @@ class _QrCodePageState extends State<QrCodePage> with SingleTickerProviderStateM
 }
 
 class _QrDecode extends StatefulWidget {
-  final int? windowId;
+  final String? windowId;
 
   const _QrDecode({this.windowId});
 
@@ -217,17 +217,14 @@ class _QrDecodeState extends State<_QrDecode> with AutomaticKeepAliveClientMixin
   //选择照片
   Future<String?> selectImage() async {
     if (Platforms.isMobile()) {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-      );
-      if (result == null || result.files.isEmpty) return null;
-      return result.files.single.path;
+      final file = await FilePicker.pickFile(type: FileType.image);
+      if (file == null) return null;
+      return file.path;
     }
 
     if (Platforms.isDesktop()) {
       //<String>['jpg', 'png', 'jpeg']
-      FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+      FilePickerResult? result = await FilePicker.pickFiles(type: FileType.image);
       if (result == null || result.files.isEmpty) return null;
       return result.files.single.path;
     }
@@ -237,7 +234,7 @@ class _QrDecodeState extends State<_QrDecode> with AutomaticKeepAliveClientMixin
 }
 
 class _QrEncode extends StatefulWidget {
-  final int? windowId;
+  final String? windowId;
 
   const _QrEncode({this.windowId});
 
@@ -338,12 +335,12 @@ class _QrEncodeState extends State<_QrEncode> with AutomaticKeepAliveClientMixin
   }
 
   //保存相册
-  saveImage() async {
+  Future<void> saveImage() async {
     if (data == null || data!.isEmpty) {
       return;
     }
 
-    if (Platforms.isMobile()) {
+    if (Platform.isIOS) {
       var imageBytes = await toImageBytes();
       if (imageBytes == null) return;
       String? path = await ImagePickers.saveByteDataImageToGallery(imageBytes);
@@ -352,21 +349,11 @@ class _QrEncodeState extends State<_QrEncode> with AutomaticKeepAliveClientMixin
       }
       return;
     }
-
-    String? path;
-    if (Platform.isMacOS) {
-      path = await DesktopMultiWindow.invokeMethod(0, "saveFile", {"fileName": "qrcode.png"});
-      WindowController.fromWindowId(widget.windowId!).show();
-    } else {
-      path = (await FilePicker.platform.saveFile(fileName: "qrcode.png", initialDirectory: "~/Downloads"));
-    }
-
-    if (path == null) return;
-
     var imageBytes = await toImageBytes();
     if (imageBytes == null) return;
 
-    await File(path).writeAsBytes(imageBytes);
+    String? path = await FilePicker.saveFile(fileName: "qrcode.png", bytes: imageBytes, type: FileType.image);
+    if (path == null) return;
     if (mounted) {
       CustomToast.success(localizations.saveSuccess).show(context);
     }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2023 Hongen Wang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:desktop_multi_window/desktop_multi_window.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:proxypin/ui/component/multi_window_compat.dart';
 import 'package:flutter/material.dart';
 import 'package:proxypin/l10n/app_localizations.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:proxypin/network/bin/server.dart';
 import 'package:proxypin/network/components/manager/request_crypto_manager.dart';
 import 'package:proxypin/network/components/manager/request_breakpoint_manager.dart';
@@ -32,7 +30,6 @@ import 'package:proxypin/network/components/manager/script_manager.dart';
 import 'package:proxypin/network/http/http.dart';
 import 'package:proxypin/network/util/logger.dart';
 import 'package:proxypin/network/components/request_breakpoint.dart';
-import 'package:proxypin/ui/component/device.dart';
 import 'package:proxypin/ui/component/utils.dart';
 import 'package:proxypin/ui/content/body.dart';
 import 'package:proxypin/ui/content/panel.dart';
@@ -42,7 +39,6 @@ import 'package:proxypin/ui/desktop/setting/request_rewrite.dart';
 import 'package:proxypin/ui/desktop/setting/script.dart';
 import 'package:proxypin/ui/toolbox/aes_page.dart';
 import 'package:proxypin/utils/platform.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../desktop/setting/request_breakpoint.dart';
@@ -51,7 +47,11 @@ import '../desktop/setting/request_map.dart';
 import '../toolbox/cert_hash.dart';
 import '../toolbox/encoder.dart';
 import '../toolbox/js_run.dart';
+import '../toolbox/json_viewer.dart';
 import '../toolbox/qr_code_page.dart';
+import '../toolbox/text_diff.dart';
+import '../toolbox/text_editor.dart';
+import '../toolbox/xml_viewer.dart';
 import '../toolbox/regexp.dart';
 import '../toolbox/timestamp.dart';
 import '../toolbox/websocket_request.dart';
@@ -59,7 +59,7 @@ import '../toolbox/websocket_request.dart';
 bool isMultiWindow = false;
 
 ///多窗口
-Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
+Widget multiWindow(String windowId, Map<dynamic, dynamic> argument) {
   isMultiWindow = true;
   //请求编辑器
   if (argument['name'] == 'RequestEditor') {
@@ -121,6 +121,22 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
     return QrCodePage(windowId: windowId);
   }
 
+  if (argument['name'] == 'JsonViewerPage') {
+    return JsonViewerPage(windowId: windowId);
+  }
+
+  if (argument['name'] == 'XmlViewerPage') {
+    return XmlViewerPage(windowId: windowId);
+  }
+
+  if (argument['name'] == 'TextDiffPage') {
+    return TextDiffPage(windowId: windowId);
+  }
+
+  if (argument['name'] == 'TextEditorPage') {
+    return TextEditorPage(windowId: windowId);
+  }
+
   if (argument['name'] == 'CertHashPage') {
     return CertHashPage(windowId: windowId);
   }
@@ -180,7 +196,7 @@ class MultiWindow {
   /// 刷新请求重写
   static Future<void> invokeRefreshRewrite(Operation operation,
       {int? index, RequestRewriteRule? rule, List<RewriteItem>? items, bool? enabled}) async {
-    await DesktopMultiWindow.invokeMethod(0, "refreshRequestRewrite", {
+    await DesktopMultiWindow.invokeMainWindowMethod("refreshRequestRewrite", {
       "enabled": enabled,
       "operation": operation.name,
       'index': index,
@@ -193,7 +209,7 @@ class MultiWindow {
       {Size size = const Size(800, 680), Map<String, dynamic>? args}) async {
     if (Platform.isAndroid || Platform.isIOS) {
       onOpenWindow?.call(widgetName, args);
-      return WindowController.fromWindowId(0); // Dummy controller
+      return WindowController.fromWindowId('0'); // Dummy controller
     }
 
     var ratio = 1.0;
@@ -204,11 +220,13 @@ class MultiWindow {
     final window = await DesktopMultiWindow.createWindow(jsonEncode(
       {'name': widgetName, ...?args},
     ));
-    window.setTitle(title);
-    window
-      ..setFrame(const Offset(50, -10) & Size(size.width * ratio, size.height * ratio))
-      ..center();
-    window.show();
+
+    if (!Platform.isMacOS) {
+      window.setTitle(title);
+    }
+    await window.center();
+    await window.setSize(Size(size.width * ratio, size.height * ratio));
+    await window.show();
 
     return window;
   }
@@ -298,35 +316,9 @@ void registerMethodHandler() {
       return 'done';
     }
 
-    if (call.method == 'pickFiles') {
-      var extensions = call.arguments != null ? call.arguments['allowedExtensions'] : null;
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-          type: extensions == null ? FileType.any : FileType.custom,
-          allowedExtensions: extensions == null ? null : List.from(extensions),
-          initialDirectory: "/Downloads");
-      if (result == null || result.files.isEmpty) return null;
-      return result.files.single.path;
-    }
-
-    if (call.method == 'saveFile') {
-      return await FilePicker.platform.saveFile(fileName: call.arguments['fileName']);
-    }
-
-    if (call.method == 'getApplicationSupportDirectory') {
-      return getApplicationSupportDirectory().then((it) => it.path);
-    }
-
-    if (call.method == 'launchUrl') {
-      return launchUrl(Uri.parse(call.arguments));
-    }
-
     if (call.method == 'registerConsoleLog') {
       ScriptManager.registerConsoleLog(fromWindowId);
       return "done";
-    }
-
-    if (call.method == 'deviceId') {
-      return await DeviceUtils.desktopDeviceId();
     }
 
     if (call.method == 'resumeRequest') {
@@ -367,11 +359,10 @@ Future<void> encodeWindow(EncoderType type, BuildContext context, [String? text]
     {'name': 'EncoderWidget', 'type': type.name, 'text': text},
   ));
   if (!context.mounted) return;
-  window.setTitle(AppLocalizations.of(context)!.encode);
-  window
-    ..setFrame(const Offset(80, 80) & Size(900 * ratio, 600 * ratio))
-    ..center()
-    ..show();
+  await window.setTitle(AppLocalizations.of(context)!.encode);
+  await window.setSize(Size(900 * ratio, 600 * ratio));
+  await window.center();
+  await window.show();
 }
 
 Future<void> openScriptConsoleWindow() async {
@@ -382,9 +373,8 @@ Future<void> openScriptConsoleWindow() async {
   final window = await DesktopMultiWindow.createWindow(jsonEncode(
     {'name': 'ScriptConsoleWidget'},
   ));
-  window.setTitle('Script Console');
-  window
-    ..setFrame(const Offset(50, 0) & Size(900 * ratio, 650 * ratio))
-    ..center();
-  window.show();
+  await window.setTitle('Script Console');
+  await window.setSize(Size(900 * ratio, 650 * ratio));
+  await window.center();
+  await window.show();
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -13,7 +14,89 @@ import '../../util/uri.dart';
 import 'file.dart';
 import 'md5.dart';
 
+class JavaScriptRuntimePool {
+  final int size;
+  final Function(dynamic args)? consoleLog;
+
+  final List<_PooledJavaScriptRuntime> _runtimes = [];
+
+  JavaScriptRuntimePool({required int size, this.consoleLog}) : size = size < 1 ? 1 : size;
+
+  Future<T> run<T>(Future<T> Function(JavascriptRuntime flutterJs) action) async {
+    final runtime = _selectRuntime();
+    runtime.pending++;
+    try {
+      final flutterJs = await runtime.flutterJs.onError((error, stackTrace) {
+        _runtimes.remove(runtime);
+        throw error!;
+      });
+      return await JavaScriptEngine.synchronized(flutterJs, () => action(flutterJs));
+    } on TimeoutException catch (e) {
+      _runtimes.remove(runtime);
+      logger.e('JavaScript runtime timed out and was removed from pool: $e');
+      rethrow;
+    } finally {
+      runtime.pending--;
+    }
+  }
+
+  Future<void> dispose() async {
+    final runtimes = List<_PooledJavaScriptRuntime>.of(_runtimes);
+    _runtimes.clear();
+    for (final runtime in runtimes) {
+      (await runtime.flutterJs).dispose();
+    }
+  }
+
+  _PooledJavaScriptRuntime _selectRuntime() {
+    for (final runtime in _runtimes) {
+      if (runtime.pending == 0) {
+        return runtime;
+      }
+    }
+
+    if (_runtimes.length < size) {
+      final runtime = _PooledJavaScriptRuntime(JavaScriptEngine.getJavaScript(consoleLog: consoleLog));
+      _runtimes.add(runtime);
+      return runtime;
+    }
+
+    return _runtimes.reduce((current, next) => current.pending <= next.pending ? current : next);
+  }
+}
+
+class _PooledJavaScriptRuntime {
+  final Future<JavascriptRuntime> flutterJs;
+  int pending = 0;
+
+  _PooledJavaScriptRuntime(this.flutterJs);
+}
+
 class JavaScriptEngine {
+  static final _runtimeLocks = Expando<Future<void>>('javascriptRuntimeLocks');
+
+  static int defaultRuntimePoolSize = 4;
+  static Duration runtimeTimeout = const Duration(seconds: 30);
+
+  static Future<T> synchronized<T>(JavascriptRuntime flutterJs, Future<T> Function() action) async {
+    while (_runtimeLocks[flutterJs] != null) {
+      await _runtimeLocks[flutterJs]!.timeout(runtimeTimeout);
+    }
+
+    final completer = Completer<void>();
+    _runtimeLocks[flutterJs] = completer.future;
+    var completed = false;
+    try {
+      return await action().timeout(runtimeTimeout);
+    } finally {
+      _runtimeLocks[flutterJs] = null;
+      if (!completed) {
+        completed = true;
+        completer.complete();
+      }
+    }
+  }
+
   static Future<JavascriptRuntime> getJavaScript({Function(dynamic args)? consoleLog}) async {
     final JavascriptRuntime flutterJs = getJavascriptRuntime(xhr: false);
 
@@ -70,6 +153,34 @@ class JavaScriptEngine {
       'body': await request.decodeBodyString(),
       'rawBody': request.body
     };
+  }
+
+  /// 脚本是否未修改请求：返回对象去掉 scriptContext 后与原始请求结构一致即视为未改动。
+  /// 用于在脚本未真正改动请求时跳过 convertHttpRequest 的有损重建（避免 query 重编码/header 重排破坏签名）。
+  /// 直接复用 runScript 已构建的请求 Map 做结构化深比较，无需再次序列化。
+  static bool isRequestUnchanged(Map<dynamic, dynamic> originalRequest, dynamic result) {
+    if (result is! Map) return false;
+    final copy = Map<dynamic, dynamic>.of(result)..remove('scriptContext');
+    return _deepEquals(copy, originalRequest);
+  }
+
+  static bool _deepEquals(dynamic a, dynamic b) {
+    if (identical(a, b)) return true;
+    if (a is Map && b is Map) {
+      if (a.length != b.length) return false;
+      for (final key in a.keys) {
+        if (!b.containsKey(key) || !_deepEquals(a[key], b[key])) return false;
+      }
+      return true;
+    }
+    if (a is List && b is List) {
+      if (a.length != b.length) return false;
+      for (var i = 0; i < a.length; i++) {
+        if (!_deepEquals(a[i], b[i])) return false;
+      }
+      return true;
+    }
+    return a == b;
   }
 
   //转换js response

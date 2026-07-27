@@ -33,6 +33,7 @@ import 'package:proxypin/ui/component/utils.dart';
 import 'package:proxypin/ui/component/widgets.dart';
 import 'package:proxypin/utils/har.dart';
 import 'package:proxypin/utils/listenable_list.dart';
+import 'package:proxypin/utils/platform.dart';
 
 import '../../content/panel.dart';
 import '../request/list.dart';
@@ -162,7 +163,7 @@ class _HistoryListState extends State<_HistoryListWidget> {
                 localizations.historyRecord,
                 style: TextStyle(
                   fontSize: 12.5,
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.82),
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.82),
                 ),
               ),
               bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, thickness: 0.4)),
@@ -191,8 +192,8 @@ class _HistoryListState extends State<_HistoryListWidget> {
   }
 
   //导入har
-  import() async {
-    final results = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['har']);
+  Future<void> import() async {
+    final results = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['har']);
     if (results == null || results.files.isEmpty) {
       return;
     }
@@ -330,7 +331,7 @@ class _HistoryListState extends State<_HistoryListWidget> {
     String fileName =
         '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'.replaceAll(" ", "_").replaceAll(":", "_");
 
-    final String? path = await FilePicker.platform.saveFile(fileName: fileName);
+    final String? path = await Platforms.saveFileAdaptive(fileName: fileName);
     if (path == null) {
       return;
     }
