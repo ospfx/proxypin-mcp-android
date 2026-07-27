@@ -77,7 +77,7 @@ class McpServer {
     while (attempts < maxAttempts) {
       try {
         // Android 上 anyIPv4 会被拒绝，必须用 loopback（仅本机访问）
-        final bindAddr = Platform.isAndroid ? io.InternetAddress.loopbackIPv4 : io.InternetAddress.anyIPv4;
+        final bindAddr = io.Platform.isAndroid ? io.InternetAddress.loopbackIPv4 : io.InternetAddress.anyIPv4;
         _server = await io.HttpServer.bind(bindAddr, tryPort);
         _port = tryPort;
         _running = true;
