@@ -76,7 +76,9 @@ class McpServer {
 
     while (attempts < maxAttempts) {
       try {
-        _server = await io.HttpServer.bind(io.InternetAddress.anyIPv4, tryPort);
+        // Android 上 anyIPv4 会被拒绝，必须用 loopback（仅本机访问）
+        final bindAddr = Platform.isAndroid ? io.InternetAddress.loopbackIPv4 : io.InternetAddress.anyIPv4;
+        _server = await io.HttpServer.bind(bindAddr, tryPort);
         _port = tryPort;
         _running = true;
         logger.i('MCP Server started on port $_port');
