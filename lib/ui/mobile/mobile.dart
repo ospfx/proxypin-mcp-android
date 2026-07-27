@@ -28,6 +28,7 @@ import 'package:proxypin/native/vpn.dart';
 import 'package:proxypin/network/bin/configuration.dart';
 import 'package:proxypin/network/bin/listener.dart';
 import 'package:proxypin/network/bin/server.dart';
+import 'package:proxypin/network/mcp/mcp_server.dart';
 import 'package:proxypin/network/channel/channel.dart';
 import 'package:proxypin/network/channel/channel_context.dart';
 import 'package:proxypin/network/http/http.dart';
@@ -127,6 +128,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
     proxyServer = ProxyServer(widget.configuration);
     proxyServer.addListener(this);
     proxyServer.start();
+    // 绑定抓包数据容器到 MCP Server，供 AI 工具查询
+    McpServer.instance.bindRequestContainer(MobileApp.container);
     _remoteHistorySubscription = HistoryStorage.onRemoteImported.listen((item) => _openHistoryPage(item));
 
     if (widget.appConfiguration.upgradeNoticeV29) {

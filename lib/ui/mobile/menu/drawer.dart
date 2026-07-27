@@ -30,6 +30,7 @@ import 'package:proxypin/ui/mobile/setting/hosts.dart';
 import 'package:proxypin/ui/mobile/setting/request_breakpoint.dart';
 import 'package:proxypin/ui/mobile/setting/request_map.dart';
 import 'package:proxypin/ui/toolbox/toolbox.dart';
+import 'package:proxypin/ui/toolbox/mcp_server_page.dart';
 import 'package:proxypin/ui/component/utils.dart';
 import 'package:proxypin/ui/configuration.dart';
 import 'package:proxypin/ui/mobile/setting/preference.dart';
@@ -115,6 +116,16 @@ class DrawerWidget extends StatelessWidget {
                         return Scaffold(
                             appBar: AppBar(title: Text(localizations.toolbox), centerTitle: true),
                             body: Toolbox(proxyServer: proxyServer));
+                      }),
+                    )),
+            ListTile(
+                leading: const Icon(Icons.hub_outlined),
+                title: const Text('MCP Server'),
+                onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (BuildContext context) {
+                        return Scaffold(
+                            appBar: AppBar(title: const Text('MCP Server'), centerTitle: true),
+                            body: const McpServerPage());
                       }),
                     )),
             ListTile(
