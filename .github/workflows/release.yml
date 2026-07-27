@@ -55,8 +55,9 @@ jobs:
       - name: Rename & Stage APK
         run: |
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-release.apk \
-             "dist/proxypin-mcp-android-${APP_VERSION}.apk"
+          apk=$(find build/app/outputs/flutter-apk -maxdepth 1 -name '*.apk' | head -1)
+          echo "Built APK: $apk"
+          cp "$apk" "dist/proxypin-mcp-android-${APP_VERSION}.apk"
           ls -lh dist/
 
       - name: Upload Android APKs
