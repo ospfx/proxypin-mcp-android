@@ -41,8 +41,8 @@ jobs:
       - name: Generate Localization
         run: flutter gen-l10n
 
-      - name: Build APK (release, split per abi)
-        run: flutter build apk --release --split-per-abi
+      - name: Build APK (release, universal)
+        run: flutter build apk --release
 
       - name: Read App Version
         id: version
@@ -52,13 +52,11 @@ jobs:
           echo "app_version=$version" >> "$GITHUB_OUTPUT"
           echo "APP_VERSION=$version" >> "$GITHUB_ENV"
 
-      - name: Rename & Stage APKs
+      - name: Rename & Stage APK
         run: |
           mkdir -p dist
-          for f in build/app/outputs/flutter-apk/app-*-release.apk; do
-            abi=$(basename "$f" | sed -E 's/app-(.*)-release\.apk/\1/')
-            cp "$f" "dist/proxypin-mcp-android-${APP_VERSION}-${abi}.apk"
-          done
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             "dist/proxypin-mcp-android-${APP_VERSION}.apk"
           ls -lh dist/
 
       - name: Upload Android APKs
