@@ -41,7 +41,19 @@ class _McpServerPageState extends State<McpServerPage> {
   @override
   void initState() {
     super.initState();
-    _portController.text = _mcpServer.port.toString();
+    // 读取本地保存的端口，没有再默认 9099
+    McpServer.loadPort().then((savedPort) {
+      if (savedPort != null && savedPort != _mcpServer.port) {
+        _mcpServer.port = savedPort;
+      }
+      if (mounted) {
+        setState(() {
+          _portController.text = _mcpServer.port.toString();
+        });
+      } else {
+        _portController.text = _mcpServer.port.toString();
+      }
+    });
   }
 
   @override

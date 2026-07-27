@@ -18,6 +18,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:proxypin/network/http/http.dart' as http;
 import 'package:proxypin/network/mcp/mcp_tools.dart';
 import 'package:proxypin/network/util/logger.dart';
@@ -40,6 +42,25 @@ class McpServer {
 
   McpServer._({int port = 9099}) : _port = port;
 
+  static const String _prefsKey = 'proxyPinMcp_port';
+
+  /// 从本地读取已保存的端口
+  static Future<int?> loadPort() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getInt(_prefsKey);
+    } catch (_) {}
+    return null;
+  }
+
+  /// 保存端口到本地
+  static Future<void> savePort(int port) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_prefsKey, port);
+    } catch (_) {}
+  }
+
   static McpServer get instance {
     _instance ??= McpServer._();
     return _instance!;
@@ -50,6 +71,7 @@ class McpServer {
 
   set port(int value) {
     _port = value;
+    savePort(value);
   }
 
   /// 绑定抓包数据容器
