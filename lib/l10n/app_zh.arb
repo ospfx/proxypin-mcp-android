@@ -408,6 +408,8 @@
   "mcpServerDesc": "MCP 服务让 AI 工具能够访问抓包数据进行分析",
   "mcpRunning": "正在运行，端口 {port}",
   "mcpStopped": "已停止",
+  "mcpAutoStart": "自动启动",
+  "mcpAutoStartDesc": "App 启动时自动开启 MCP 服务",
   "mcpStopToChange": "停止服务后可修改端口",
   "mcpConnectionInfo": "连接信息",
   "mcpConfigGuide": "AI 配置指南",

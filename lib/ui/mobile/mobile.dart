@@ -130,6 +130,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
     proxyServer.start();
     // 绑定抓包数据容器到 MCP Server，供 AI 工具查询
     McpServer.instance.bindRequestContainer(MobileApp.container);
+    // 按配置自动启动 MCP Server（默认开启，可在 MCP Server 页面关闭）
+    unawaited(McpServer.instance.autoStartIfEnabled());
     _remoteHistorySubscription = HistoryStorage.onRemoteImported.listen((item) => _openHistoryPage(item));
 
     if (widget.appConfiguration.upgradeNoticeV29) {

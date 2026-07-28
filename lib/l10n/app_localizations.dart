@@ -2380,6 +2380,18 @@ abstract class AppLocalizations {
   /// **'Stopped'**
   String get mcpStopped;
 
+  /// No description provided for @mcpAutoStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Start'**
+  String get mcpAutoStart;
+
+  /// No description provided for @mcpAutoStartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically start MCP Server when the app launches'**
+  String get mcpAutoStartDesc;
+
   /// No description provided for @mcpStopToChange.
   ///
   /// In en, this message translates to:

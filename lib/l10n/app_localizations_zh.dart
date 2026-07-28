@@ -1168,6 +1168,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mcpStopped => '已停止';
 
   @override
+  String get mcpAutoStart => '自动启动';
+
+  @override
+  String get mcpAutoStartDesc => 'App 启动时自动开启 MCP 服务';
+
+  @override
   String get mcpStopToChange => '停止服务后可修改端口';
 
   @override
@@ -2350,6 +2356,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get mcpStopped => '已停止';
+
+  @override
+  String get mcpAutoStart => '自動啟動';
+
+  @override
+  String get mcpAutoStartDesc => 'App 啟動時自動開啟 MCP 服務';
 
   @override
   String get mcpStopToChange => '停止服務後可修改連接埠';

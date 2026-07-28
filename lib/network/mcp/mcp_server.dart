@@ -58,6 +58,7 @@ class McpServer {
   McpServer._({int port = defaultPort}) : _port = port;
 
   static const String _prefsKey = 'proxyPinMcp_port';
+  static const String _autoStartKey = 'proxyPinMcp_autoStart';
 
   /// 从本地读取已保存的端口
   static Future<int?> loadPort() async {
@@ -74,6 +75,41 @@ class McpServer {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_prefsKey, port);
     } catch (_) {}
+  }
+
+  /// 读取自动启动开关（默认开启）
+  static Future<bool> loadAutoStart() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_autoStartKey) ?? true;
+    } catch (_) {}
+    return true;
+  }
+
+  /// 保存自动启动开关
+  static Future<void> saveAutoStart(bool enabled) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_autoStartKey, enabled);
+    } catch (_) {}
+  }
+
+  /// App 启动时调用：恢复已保存端口，并按配置自动启动服务
+  Future<void> autoStartIfEnabled() async {
+    final savedPort = await loadPort();
+    if (savedPort != null && savedPort > 0 && savedPort < 65536 && savedPort != _port) {
+      _port = savedPort; // 直接赋值，不重复写回本地
+    }
+
+    final enabled = await loadAutoStart();
+    if (!enabled || _running) return;
+
+    try {
+      await start();
+      logger.i('MCP Server auto-started on port $_port');
+    } catch (e) {
+      logger.e('MCP Server auto-start failed: $e');
+    }
   }
 
   static McpServer get instance {

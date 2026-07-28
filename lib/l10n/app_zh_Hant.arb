@@ -365,6 +365,8 @@
   "mcpServerDesc": "MCP 服務讓 AI 工具能夠存取抓包資料進行分析",
   "mcpRunning": "正在運行，連接埠 {port}",
   "mcpStopped": "已停止",
+  "mcpAutoStart": "自動啟動",
+  "mcpAutoStartDesc": "App 啟動時自動開啟 MCP 服務",
   "mcpStopToChange": "停止服務後可修改連接埠",
   "mcpConnectionInfo": "連線資訊",
   "mcpConfigGuide": "AI 設定指南",

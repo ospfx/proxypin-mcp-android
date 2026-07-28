@@ -35,6 +35,7 @@ class _McpServerPageState extends State<McpServerPage> {
   final McpServer _mcpServer = McpServer.instance;
   final TextEditingController _portController = TextEditingController();
   bool _isLoading = false;
+  bool _autoStart = true;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
@@ -52,6 +53,16 @@ class _McpServerPageState extends State<McpServerPage> {
         });
       } else {
         _portController.text = _mcpServer.port.toString();
+      }
+    });
+    // 读取自动启动开关
+    McpServer.loadAutoStart().then((enabled) {
+      if (mounted) {
+        setState(() {
+          _autoStart = enabled;
+        });
+      } else {
+        _autoStart = enabled;
       }
     });
   }
@@ -215,6 +226,33 @@ class _McpServerPageState extends State<McpServerPage> {
                     ),
                   ),
                 ],
+              ],
+            ),
+            const SizedBox(height: 12),
+            // 自动启动开关
+            Row(
+              children: [
+                Icon(Icons.power_settings_new, size: 18, color: theme.iconTheme.color?.withValues(alpha: 0.5)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(localizations.mcpAutoStart, style: theme.textTheme.bodyMedium),
+                      Text(localizations.mcpAutoStartDesc,
+                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 11, color: theme.hintColor)),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _autoStart,
+                  onChanged: (value) {
+                    setState(() {
+                      _autoStart = value;
+                    });
+                    McpServer.saveAutoStart(value);
+                  },
+                ),
               ],
             ),
           ],

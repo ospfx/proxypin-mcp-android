@@ -414,6 +414,8 @@
   "mcpServerDesc": "MCP Server for AI tools to access captured traffic data",
   "mcpRunning": "Running on port {port}",
   "mcpStopped": "Stopped",
+  "mcpAutoStart": "Auto Start",
+  "mcpAutoStartDesc": "Automatically start MCP Server when the app launches",
   "mcpStopToChange": "Stop server to change port",
   "mcpConnectionInfo": "Connection Info",
   "mcpConfigGuide": "AI Configuration Guide",

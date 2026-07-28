@@ -1181,6 +1181,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mcpStopped => 'Stopped';
 
   @override
+  String get mcpAutoStart => 'Auto Start';
+
+  @override
+  String get mcpAutoStartDesc => 'Automatically start MCP Server when the app launches';
+
+  @override
   String get mcpStopToChange => 'Stop server to change port';
 
   @override
