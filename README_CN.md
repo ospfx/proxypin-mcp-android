@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-> **本仓库是 [ProxyPin](https://github.com/wanghongenpin/proxypin) 的 MCP 增强版，仅支持 Android 平台。**
+> **本仓库是 [ProxyPin](https://github.com/wanghongenpin/proxypin) 的 MCP 增强版，仅支持 Android 平台**（已同步上游 **v1.3.0**）。
 > 在保留原版全部抓包功能的基础上，内置了完整的 **MCP Server（Model Context Protocol）**，让 AI（Claude、Cursor、Windsurf 等）能够直接连接安卓设备上运行的代理，读取抓包数据，并主动操控拦截与改包——无需任何额外服务或 Python 脚本。
 
 ---
@@ -35,7 +35,8 @@ MCP Server 默认监听 **9010** 端口，同时提供两种传输方式：
 - **Streamable HTTP**（`/mcp`）—— 当前最新的 MCP 传输协议（协议版本 `2025-06-18`，支持版本协商与 `Mcp-Session-Id` 会话管理）。**推荐使用。**
 - **旧版 HTTP+SSE**（`/sse`）—— 为老客户端保留（协议版本 `2024-11-05`）。
 
-端口可在 App 内修改（工具箱 → MCP Server），修改后会自动保存，重启不丢失。
+MCP Server 会在 App 启动时**自动开启**（默认开，可在 工具箱 → MCP Server 关闭）。
+端口也可在此处修改，修改后会自动保存，重启不丢失。
 
 在 Claude Desktop / Cursor / Windsurf 中配置：
 
@@ -125,13 +126,20 @@ AI → release_intercept requestId=xxx body='{"user":"admin","pass":"test"}'
 
 ## 下载与构建
 
+### 下载
+
+从 [GitHub Releases](https://github.com/Mohen0/proxypin-mcp-android/releases) 获取最新 APK
+（`proxypin-mcp-android-{ver}.apk`，通用包：arm64-v8a / armeabi-v7a / x86_64）。
+
+仓库地址：[Mohen0/proxypin-mcp-android](https://github.com/Mohen0/proxypin-mcp-android)
+
 ### GitHub Actions 构建（推荐）
 
 推送 `v*` 标签，CI 自动构建通用 release APK 并附加到 GitHub Release：
 
 ```bash
-git tag v1.3.1
-git push origin v1.3.1
+git tag v1.3.0-mcp
+git push origin v1.3.0-mcp
 # GitHub Actions 自动构建 proxypin-mcp-android-{ver}.apk
 ```
 

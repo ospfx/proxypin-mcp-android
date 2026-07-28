@@ -2,7 +2,7 @@
 
 English | [中文](README_CN.md)
 
-> **This repo is an MCP-enhanced, Android-only fork of [ProxyPin](https://github.com/wanghongenpin/proxypin).**
+> **This repo is an MCP-enhanced, Android-only fork of [ProxyPin](https://github.com/wanghongenpin/proxypin)** (synced with upstream **v1.3.0**).
 > It ships a built-in **MCP Server (Model Context Protocol)** on top of the full original capture feature set, letting AI clients (Claude, Cursor, Windsurf, etc.) connect directly to the running proxy on your Android device, read capture data, and actively control interception and modification — no extra service or Python script needed.
 
 ---
@@ -35,7 +35,8 @@ The MCP Server listens on port **9010** by default and speaks two transports:
 - **Streamable HTTP** at `/mcp` — the current MCP transport (protocol `2025-06-18`, with version negotiation and `Mcp-Session-Id` session management). **Recommended.**
 - **Legacy HTTP+SSE** at `/sse` — kept for older clients (protocol `2024-11-05`).
 
-The port is configurable in the app (Toolbox → MCP Server) and is persisted across restarts.
+The server **starts automatically** when the app launches (default on; toggle in Toolbox → MCP Server).
+The port is configurable there as well and is persisted across restarts.
 
 Configure in Claude Desktop / Cursor / Windsurf:
 
@@ -125,13 +126,20 @@ AI → release_intercept requestId=xxx body='{"user":"admin","pass":"test"}'
 
 ## Download & Build
 
+### Download
+
+Get the latest APK from [GitHub Releases](https://github.com/Mohen0/proxypin-mcp-android/releases)
+(`proxypin-mcp-android-{ver}.apk`, universal: arm64-v8a / armeabi-v7a / x86_64).
+
+Repo: [Mohen0/proxypin-mcp-android](https://github.com/Mohen0/proxypin-mcp-android)
+
 ### GitHub Actions (recommended)
 
 Push a `v*` tag and the CI builds a universal release APK and attaches it to a GitHub Release:
 
 ```bash
-git tag v1.3.1
-git push origin v1.3.1
+git tag v1.3.0-mcp
+git push origin v1.3.0-mcp
 # GitHub Actions builds proxypin-mcp-android-{ver}.apk automatically
 ```
 
