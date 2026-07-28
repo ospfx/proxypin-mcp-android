@@ -49,7 +49,7 @@ import 'package:proxypin/utils/listenable_list.dart';
 
 import '../../component/proxy_port_setting.dart';
 import '../../component/widgets.dart';
-import '../../desktop/setting/external_proxy.dart';
+import '../../mobile/setting/external_proxy.dart';
 
 ///左侧抽屉
 class DrawerWidget extends StatelessWidget {

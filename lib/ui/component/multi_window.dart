@@ -23,7 +23,9 @@ class MultiWindow {
   static Function(String widgetName, Map<String, dynamic>? args)? onOpenWindow;
 
   /// 打开窗口：移动端通过 [onOpenWindow] 回调导航到对应页面
-  static Future<void> openWindow(String title, String widgetName, {Map<String, dynamic>? args}) async {
+  /// [size] 仅为桌面端多窗口保留的兼容参数，移动端忽略
+  static Future<void> openWindow(String title, String widgetName,
+      {Size size = const Size(800, 680), Map<String, dynamic>? args}) async {
     onOpenWindow?.call(widgetName, args);
   }
 }
