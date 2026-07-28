@@ -2,7 +2,7 @@
 
 ## What This Project Is
 - `proxypin` is a Flutter **Android** app with an in-process HTTP(S) proxy core; UI and proxy run in the same app process (`lib/main.dart`, `lib/network/bin/server.dart`).
-- This fork adds a built-in **MCP Server** (`lib/network/mcp/`) exposing capture data and interception control to AI clients over SSE (default port 9099).
+- This fork adds a built-in **MCP Server** (`lib/network/mcp/`) exposing capture data and interception control to AI clients. Transports: Streamable HTTP at `/mcp` (protocol `2025-06-18`, recommended) and legacy HTTP+SSE at `/sse` (protocol `2024-11-05`). Default port 9010.
 - Primary value flows are capture -> mutate -> inspect -> persist traffic. Android is the only supported platform.
 
 ## Architecture You Need First

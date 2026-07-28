@@ -17,6 +17,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
+import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,7 +27,9 @@ import 'package:proxypin/network/util/logger.dart';
 import 'package:proxypin/utils/listenable_list.dart';
 
 /// MCP (Model Context Protocol) Server
-/// 提供 SSE 传输的 MCP 服务，让外部 AI 工具能够访问抓包数据
+/// 同时提供两种传输：
+///  - Streamable HTTP（/mcp，MCP 2025-03-26+ 规范的最新传输方式）
+///  - 旧版 HTTP+SSE（/sse + /message，向后兼容 2024-11-05 客户端）
 /// @author ProxyPin
 class McpServer {
   static McpServer? _instance;
@@ -34,13 +37,25 @@ class McpServer {
   int _port;
   bool _running = false;
 
-  /// SSE 客户端连接列表
+  /// 默认端口
+  static const int defaultPort = 9010;
+
+  /// 服务端支持的最新的 MCP 协议版本
+  static const String latestProtocolVersion = '2025-06-18';
+
+  /// 服务端支持协商的协议版本列表
+  static const List<String> supportedProtocolVersions = ['2024-11-05', '2025-03-26', '2025-06-18'];
+
+  /// SSE 客户端连接列表（旧版传输）
   final List<_SseClient> _sseClients = [];
+
+  /// Streamable HTTP 会话（Mcp-Session-Id -> session）
+  final Map<String, _McpSession> _sessions = {};
 
   /// 抓包数据源引用
   ListenableList<http.HttpRequest>? _requestContainer;
 
-  McpServer._({int port = 9099}) : _port = port;
+  McpServer._({int port = defaultPort}) : _port = port;
 
   static const String _prefsKey = 'proxyPinMcp_port';
 
@@ -103,7 +118,7 @@ class McpServer {
         _server = await io.HttpServer.bind(bindAddr, tryPort);
         _port = tryPort;
         _running = true;
-        logger.i('MCP Server started on port $_port');
+        logger.i('MCP Server started on port $_port (streamable-http: /mcp, legacy-sse: /sse)');
 
         _server!.listen((io.HttpRequest httpRequest) {
           _handleRequest(httpRequest);
@@ -132,6 +147,7 @@ class McpServer {
       client.close();
     }
     _sseClients.clear();
+    _sessions.clear();
 
     await _server?.close(force: true);
     _server = null;
@@ -154,6 +170,21 @@ class McpServer {
       return;
     }
 
+    // 新版 Streamable HTTP 传输（MCP 2025-03-26+）
+    if (path == '/mcp') {
+      if (method == 'POST') {
+        _handleStreamableHttp(request);
+      } else if (method == 'GET') {
+        _handleStreamableHttpGet(request);
+      } else if (method == 'DELETE') {
+        _handleSessionDelete(request);
+      } else {
+        _writeError(request.response, io.HttpStatus.methodNotAllowed, -32601, 'Method not allowed');
+      }
+      return;
+    }
+
+    // 旧版 HTTP+SSE 传输（向后兼容）
     if (path == '/sse' && method == 'GET') {
       _handleSseConnection(request);
     } else if (path == '/message' && method == 'POST') {
@@ -170,8 +201,9 @@ class McpServer {
 
   void _setCorsHeaders(io.HttpResponse response) {
     response.headers.set('Access-Control-Allow-Origin', '*');
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Mcp-Session-Id, MCP-Protocol-Version, Last-Event-ID');
+    response.headers.set('Access-Control-Expose-Headers', 'Mcp-Session-Id, MCP-Protocol-Version');
     response.headers.set('Access-Control-Max-Age', '86400');
   }
 
@@ -183,11 +215,166 @@ class McpServer {
       ..write(jsonEncode({
         'status': 'ok',
         'server': 'ProxyPin MCP Server',
-        'version': '1.0.0',
+        'version': '1.1.0',
+        'protocolVersion': latestProtocolVersion,
+        'supportedProtocolVersions': supportedProtocolVersions,
+        'transports': {
+          'streamableHttp': '/mcp',
+          'legacySse': '/sse',
+        },
         'requestCount': _requestContainer?.length ?? 0,
       }))
       ..close();
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // Streamable HTTP 传输（MCP 2025-03-26 / 2025-06-18）
+  // ─────────────────────────────────────────────────────────────
+
+  /// 处理 POST /mcp：客户端发送 JSON-RPC 消息，服务端以 application/json 返回
+  Future<void> _handleStreamableHttp(io.HttpRequest request) async {
+    // 读取请求体
+    final body = await utf8.decoder.bind(request).join();
+    if (body.isEmpty) {
+      _writeError(request.response, io.HttpStatus.badRequest, -32700, 'Empty request body');
+      return;
+    }
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(body);
+    } catch (e) {
+      _writeError(request.response, io.HttpStatus.badRequest, -32700, 'Parse error: $e');
+      return;
+    }
+
+    // 仅支持单条消息（MCP 2025-03-26 起移除了 JSON-RPC 批处理）
+    if (decoded is! Map<String, dynamic>) {
+      _writeError(request.response, io.HttpStatus.badRequest, -32600, 'Invalid Request: expected a single JSON-RPC object');
+      return;
+    }
+
+    final message = decoded;
+    final method = message['method'] as String?;
+    final hasId = message.containsKey('id') && message['id'] != null;
+
+    // 会话校验（initialize 之外的消息若携带了未知会话 id 则拒绝；未携带则宽容放行）
+    final sessionId = request.headers.value('Mcp-Session-Id');
+    if (method != 'initialize' && sessionId != null && !_sessions.containsKey(sessionId)) {
+      _writeError(request.response, io.HttpStatus.notFound, -32001, 'Session not found or expired');
+      return;
+    }
+    final session = sessionId == null ? null : _sessions[sessionId];
+    session?.touch();
+
+    // 客户端发送的是通知或响应（无 id）→ 202 Accepted，无响应体
+    if (!hasId) {
+      logger.d('MCP notification/response via /mcp: $method');
+      request.response
+        ..statusCode = io.HttpStatus.accepted
+        ..close();
+      return;
+    }
+
+    // initialize：协商协议版本并创建会话
+    if (method == 'initialize') {
+      final params = message['params'] as Map<String, dynamic>? ?? {};
+      final clientVersion = params['protocolVersion'] as String?;
+      final negotiated = _negotiateProtocolVersion(clientVersion);
+
+      final newSession = _McpSession(_generateSessionId(), negotiated);
+      _sessions[newSession.id] = newSession;
+      logger.i('MCP session created (streamable-http): ${newSession.id}, protocol: $negotiated');
+
+      _writeJsonRpc(request.response, _initializeResult(message['id'], negotiated), sessionId: newSession.id);
+      return;
+    }
+
+    // 其余请求：正常处理后以 application/json 返回
+    final jsonRpcResponse = await _handleJsonRpc(message);
+    _writeJsonRpc(request.response, jsonRpcResponse, sessionId: sessionId);
+  }
+
+  /// 处理 GET /mcp：用于服务端主动推送的 SSE 流。
+  /// 本服务不主动推送消息，按规范返回 405。
+  void _handleStreamableHttpGet(io.HttpRequest request) {
+    request.response
+      ..statusCode = io.HttpStatus.methodNotAllowed
+      ..headers.contentType = io.ContentType.json
+      ..write(jsonEncode({
+        'jsonrpc': '2.0',
+        'error': {'code': -32601, 'message': 'Server does not offer an SSE stream at this endpoint'},
+        'id': null,
+      }))
+      ..close();
+  }
+
+  /// 处理 DELETE /mcp：客户端显式终止会话
+  void _handleSessionDelete(io.HttpRequest request) {
+    final sessionId = request.headers.value('Mcp-Session-Id');
+    if (sessionId != null && _sessions.remove(sessionId) != null) {
+      logger.i('MCP session terminated: $sessionId');
+      request.response
+        ..statusCode = io.HttpStatus.ok
+        ..close();
+      return;
+    }
+    _writeError(request.response, io.HttpStatus.notFound, -32001, 'Session not found');
+  }
+
+  /// 协议版本协商：客户端请求的版本受支持则回显，否则返回服务端最新版本
+  String _negotiateProtocolVersion(String? clientVersion) {
+    if (clientVersion != null && supportedProtocolVersions.contains(clientVersion)) {
+      return clientVersion;
+    }
+    return latestProtocolVersion;
+  }
+
+  String _generateSessionId() {
+    final rand = Random.secure();
+    final bytes = List<int>.generate(16, (_) => rand.nextInt(256));
+    return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  Map<String, dynamic> _initializeResult(dynamic id, String protocolVersion) {
+    return _buildResponse(id, {
+      'protocolVersion': protocolVersion,
+      'capabilities': {
+        'tools': {},
+      },
+      'serverInfo': {
+        'name': 'proxypin-mcp-server',
+        'version': '1.1.0',
+      },
+    });
+  }
+
+  void _writeJsonRpc(io.HttpResponse response, Map<String, dynamic> jsonRpc, {String? sessionId}) {
+    if (sessionId != null) {
+      response.headers.set('Mcp-Session-Id', sessionId);
+    }
+    response
+      ..statusCode = io.HttpStatus.ok
+      ..headers.contentType = io.ContentType.json
+      ..write(jsonEncode(jsonRpc))
+      ..close();
+  }
+
+  void _writeError(io.HttpResponse response, int statusCode, int rpcCode, String message) {
+    response
+      ..statusCode = statusCode
+      ..headers.contentType = io.ContentType.json
+      ..write(jsonEncode({
+        'jsonrpc': '2.0',
+        'error': {'code': rpcCode, 'message': message},
+        'id': null,
+      }))
+      ..close();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 旧版 HTTP+SSE 传输（向后兼容 2024-11-05）
+  // ─────────────────────────────────────────────────────────────
 
   /// 处理 SSE 连接
   void _handleSseConnection(io.HttpRequest request) {
@@ -223,7 +410,7 @@ class McpServer {
     });
   }
 
-  /// 处理 MCP JSON-RPC 消息
+  /// 处理 MCP JSON-RPC 消息（旧版传输）
   Future<void> _handleMessage(io.HttpRequest request) async {
     try {
       final body = await utf8.decoder.bind(request).join();
@@ -262,6 +449,10 @@ class McpServer {
     }
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // 公共 JSON-RPC 处理
+  // ─────────────────────────────────────────────────────────────
+
   /// 处理 JSON-RPC 方法调用
   Future<Map<String, dynamic>> _handleJsonRpc(Map<String, dynamic> request) async {
     final method = request['method'] as String?;
@@ -270,16 +461,8 @@ class McpServer {
 
     switch (method) {
       case 'initialize':
-        return _buildResponse(id, {
-          'protocolVersion': '2024-11-05',
-          'capabilities': {
-            'tools': {},
-          },
-          'serverInfo': {
-            'name': 'proxypin-mcp-server',
-            'version': '1.0.0',
-          },
-        });
+        final clientVersion = params['protocolVersion'] as String?;
+        return _initializeResult(id, _negotiateProtocolVersion(clientVersion));
 
       case 'notifications/initialized':
         return _buildResponse(id, {});
@@ -316,7 +499,20 @@ class McpServer {
   }
 }
 
-/// SSE 客户端连接
+/// Streamable HTTP 会话
+class _McpSession {
+  final String id;
+  final String protocolVersion;
+  DateTime lastActivity = DateTime.now();
+
+  _McpSession(this.id, this.protocolVersion);
+
+  void touch() {
+    lastActivity = DateTime.now();
+  }
+}
+
+/// SSE 客户端连接（旧版传输）
 class _SseClient {
   final String sessionId;
   final io.HttpResponse _response;

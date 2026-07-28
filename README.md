@@ -30,7 +30,12 @@ English | [中文](README_CN.md)
 
 ### Connection
 
-The MCP Server listens on port **9099** by default (SSE transport, no extra dependencies required). The port is configurable in the app (Toolbox → MCP Server) and is persisted across restarts.
+The MCP Server listens on port **9010** by default and speaks two transports:
+
+- **Streamable HTTP** at `/mcp` — the current MCP transport (protocol `2025-06-18`, with version negotiation and `Mcp-Session-Id` session management). **Recommended.**
+- **Legacy HTTP+SSE** at `/sse` — kept for older clients (protocol `2024-11-05`).
+
+The port is configurable in the app (Toolbox → MCP Server) and is persisted across restarts.
 
 Configure in Claude Desktop / Cursor / Windsurf:
 
@@ -38,13 +43,13 @@ Configure in Claude Desktop / Cursor / Windsurf:
 {
   "mcpServers": {
     "proxypin": {
-      "url": "http://127.0.0.1:9099/sse"
+      "url": "http://127.0.0.1:9010/mcp"
     }
   }
 }
 ```
 
-> Running on a phone? Use the device IP (e.g. `http://192.168.1.5:9099/sse`) or `adb forward tcp:9099 tcp:9099`.
+> Running on a phone? Use the device IP (e.g. `http://192.168.1.5:9010/mcp`) or `adb forward tcp:9010 tcp:9010`.
 
 ---
 

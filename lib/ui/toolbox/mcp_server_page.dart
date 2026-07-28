@@ -41,7 +41,7 @@ class _McpServerPageState extends State<McpServerPage> {
   @override
   void initState() {
     super.initState();
-    // 读取本地保存的端口，没有再默认 9099
+    // 读取本地保存的端口，没有再默认 9010
     McpServer.loadPort().then((savedPort) {
       if (savedPort != null && savedPort != _mcpServer.port) {
         _mcpServer.port = savedPort;
@@ -226,12 +226,13 @@ class _McpServerPageState extends State<McpServerPage> {
   /// 连接信息
   Widget _buildConnectionInfo(ThemeData theme, bool isDark) {
     final localIp = _getLocalIp();
+    final mcpUrl = 'http://$localIp:${_mcpServer.port}/mcp';
     final sseUrl = 'http://$localIp:${_mcpServer.port}/sse';
 
     final configJson = '''{
   "mcpServers": {
     "proxypin": {
-      "url": "$sseUrl"
+      "url": "$mcpUrl"
     }
   }
 }''';
@@ -256,8 +257,12 @@ class _McpServerPageState extends State<McpServerPage> {
             ),
             const SizedBox(height: 12),
 
-            // SSE URL
-            _buildCopyableField(theme, 'SSE Endpoint', sseUrl, isDark),
+            // Streamable HTTP URL（最新 MCP 协议）
+            _buildCopyableField(theme, 'Streamable HTTP (推荐)', mcpUrl, isDark),
+            const SizedBox(height: 10),
+
+            // SSE URL（旧版兼容）
+            _buildCopyableField(theme, 'SSE Endpoint (旧版)', sseUrl, isDark),
             const SizedBox(height: 10),
 
             // Health URL

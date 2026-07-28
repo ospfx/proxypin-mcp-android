@@ -30,7 +30,12 @@
 
 ### 连接方式
 
-MCP Server 默认监听 **9099** 端口（SSE 传输协议，无需额外依赖）。端口可在 App 内修改（工具箱 → MCP Server），修改后会自动保存，重启不丢失。
+MCP Server 默认监听 **9010** 端口，同时提供两种传输方式：
+
+- **Streamable HTTP**（`/mcp`）—— 当前最新的 MCP 传输协议（协议版本 `2025-06-18`，支持版本协商与 `Mcp-Session-Id` 会话管理）。**推荐使用。**
+- **旧版 HTTP+SSE**（`/sse`）—— 为老客户端保留（协议版本 `2024-11-05`）。
+
+端口可在 App 内修改（工具箱 → MCP Server），修改后会自动保存，重启不丢失。
 
 在 Claude Desktop / Cursor / Windsurf 中配置：
 
@@ -38,13 +43,13 @@ MCP Server 默认监听 **9099** 端口（SSE 传输协议，无需额外依赖�
 {
   "mcpServers": {
     "proxypin": {
-      "url": "http://127.0.0.1:9099/sse"
+      "url": "http://127.0.0.1:9010/mcp"
     }
   }
 }
 ```
 
-> 在手机上运行？使用设备 IP（如 `http://192.168.1.5:9099/sse`），或通过 `adb forward tcp:9099 tcp:9099` 转发到电脑。
+> 在手机上运行？使用设备 IP（如 `http://192.168.1.5:9010/mcp`），或通过 `adb forward tcp:9010 tcp:9010` 转发到电脑。
 
 ---
 
