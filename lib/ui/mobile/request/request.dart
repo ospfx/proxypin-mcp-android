@@ -34,7 +34,6 @@ import 'package:proxypin/ui/component/utils.dart';
 import 'package:proxypin/ui/component/widgets.dart';
 import 'package:proxypin/ui/configuration.dart';
 import 'package:proxypin/ui/content/panel.dart';
-import 'package:proxypin/ui/desktop/request/request.dart';
 import 'package:proxypin/ui/mobile/request/repeat.dart';
 import 'package:proxypin/ui/mobile/request/request_editor.dart';
 import 'package:proxypin/ui/mobile/setting/request_rewrite.dart';
@@ -44,6 +43,21 @@ import 'package:proxypin/utils/keyword_highlight.dart';
 import 'package:proxypin/utils/lang.dart';
 import 'package:proxypin/utils/navigator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// 多选操作回调集合
+class RequestSelectionHandlers {
+  final Function(HttpRequest request)? onRangeSelection;
+  final VoidCallback? onDeleteSelected;
+  final VoidCallback? onRepeatSelected;
+  final VoidCallback? onExportSelected;
+
+  const RequestSelectionHandlers({
+    this.onRangeSelection,
+    this.onDeleteSelected,
+    this.onRepeatSelected,
+    this.onExportSelected,
+  });
+}
 
 ///请求行
 class RequestRow extends StatefulWidget {

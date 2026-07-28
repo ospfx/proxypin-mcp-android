@@ -8,8 +8,6 @@ import 'package:http/io_client.dart';
 import 'package:proxypin/network/bin/server.dart';
 import 'package:proxypin/network/util/file_read.dart';
 import 'package:proxypin/network/util/logger.dart';
-import 'package:proxypin/ui/component/multi_window_compat.dart';
-import 'package:proxypin/utils/platform.dart';
 
 /*
  * Based on bits and pieces from different OSS sources
@@ -257,20 +255,10 @@ extension JavascriptRuntimeXhrExtension on JavascriptRuntime {
 
     // ProxyServer.current.isRunning
     var httpClient = HttpClient();
-    String proxy;
-    if (Platforms.isDesktop()) {
-      Map? proxyResult = await DesktopMultiWindow.invokeMainWindowMethod('getProxyInfo');
-      if (proxyResult == null) {
-        return http.Client();
-      }
-      proxy = "${proxyResult['host']}:${proxyResult['port']}";
-    } else {
-      if (ProxyServer.current?.isRunning == true) {
-        proxy = "127.0.0.1:${ProxyServer.current!.port}";
-      } else {
-        return http.Client();
-      }
+    if (ProxyServer.current?.isRunning != true) {
+      return http.Client();
     }
+    String proxy = "127.0.0.1:${ProxyServer.current!.port}";
 
     httpClient.findProxy = (uri) {
       return "PROXY $proxy";

@@ -94,18 +94,6 @@ class AppConfiguration {
   /// 清空抓包前确认
   bool clearConfirm = false;
 
-  //桌面window大小
-  Size? windowSize;
-
-  //桌面window位置
-  Offset? windowPosition;
-
-  //左侧面板占比
-  double panelRatio = 0.3;
-
-  /// 关闭窗口时最小化到系统托盘
-  bool? minimizeToTray;
-
   AppConfiguration._();
 
   /// 单例
@@ -168,11 +156,6 @@ class AppConfiguration {
   }
 
   Future<File> get _path async {
-    if (Platforms.isDesktop()) {
-      var userHome = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
-      return File('$userHome${Platform.pathSeparator}.proxypin${Platform.pathSeparator}ui_config.json');
-    }
-
     final directory = await getApplicationSupportDirectory();
     var file = File('${directory.path}${Platform.pathSeparator}ui_config.json');
     if (!await file.exists()) {
@@ -213,16 +196,6 @@ class AppConfiguration {
       memoryCleanupThreshold = config['memoryCleanupThreshold'];
       autoReadEnabled = config['autoReadEnabled'] ?? true;
       clearConfirm = config['clearConfirm'] ?? false;
-
-      windowSize =
-          config['windowSize'] == null ? null : Size(config['windowSize']['width'], config['windowSize']['height']);
-      windowPosition = config['windowPosition'] == null
-          ? null
-          : Offset(config['windowPosition']['dx'], config['windowPosition']['dy']);
-      if (config['panelRatio'] != null) {
-        panelRatio = config['panelRatio'];
-      }
-      minimizeToTray = config['minimizeToTray'];
     } catch (e) {
       logger.e(e);
     }
@@ -262,12 +235,6 @@ class AppConfiguration {
       if (Platforms.isMobile()) 'pipEnabled': pipEnabled.value,
       if (Platforms.isMobile()) 'pipIcon': pipIcon.value ? true : null,
       if (Platforms.isMobile()) 'bottomNavigation': bottomNavigation,
-      if (Platforms.isDesktop())
-        "windowSize": windowSize == null ? null : {"width": windowSize?.width, "height": windowSize?.height},
-      if (Platforms.isDesktop())
-        "windowPosition": windowPosition == null ? null : {"dx": windowPosition?.dx, "dy": windowPosition?.dy},
-      if (Platforms.isDesktop()) 'panelRatio': panelRatio,
-      if (Platforms.isDesktop()) 'minimizeToTray': minimizeToTray,
     };
   }
 }

@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:proxypin/ui/component/multi_window_compat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:proxypin/l10n/app_localizations.dart';
@@ -29,10 +28,9 @@ enum EncoderType {
 
 class EncoderWidget extends StatefulWidget {
   final EncoderType type;
-  final WindowController? windowController;
   final String? text;
 
-  const EncoderWidget({super.key, required this.type, this.windowController, this.text});
+  const EncoderWidget({super.key, required this.type, this.text});
 
   @override
   State<EncoderWidget> createState() => _EncoderState();
@@ -61,26 +59,12 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
     inputText = widget.text ?? '';
 
     tabController = TabController(initialIndex: type.index, length: tabs.length, vsync: this);
-    HardwareKeyboard.instance.addHandler(onKeyEvent);
   }
 
   @override
   void dispose() {
     tabController.dispose();
-    HardwareKeyboard.instance.removeHandler(onKeyEvent);
     super.dispose();
-  }
-
-  bool onKeyEvent(KeyEvent event) {
-    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
-        event.logicalKey == LogicalKeyboardKey.keyW) {
-      HardwareKeyboard.instance.removeHandler(onKeyEvent);
-      tabController.dispose();
-      widget.windowController?.close();
-      return true;
-    }
-
-    return false;
   }
 
   @override

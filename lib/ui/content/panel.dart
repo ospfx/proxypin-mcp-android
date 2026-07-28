@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import 'package:proxypin/ui/component/multi_window_compat.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:proxypin/l10n/app_localizations.dart';
 import 'package:proxypin/network/bin/server.dart';
 import 'package:proxypin/network/http/http.dart';
@@ -106,28 +104,12 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
         responseHttpBodyKey.currentState?.hideSearchOverlay();
       }
     });
-
-    if (widget.windowId != null) {
-      HardwareKeyboard.instance.addHandler(onKeyEvent);
-    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    HardwareKeyboard.instance.removeHandler(onKeyEvent);
     super.dispose();
-  }
-
-  bool onKeyEvent(KeyEvent event) {
-    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
-        event.logicalKey == LogicalKeyboardKey.keyW) {
-      HardwareKeyboard.instance.removeHandler(onKeyEvent);
-      WindowController.fromWindowId(widget.windowId!).close();
-      return true;
-    }
-
-    return false;
   }
 
   @override

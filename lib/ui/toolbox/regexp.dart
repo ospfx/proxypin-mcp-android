@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import 'package:proxypin/ui/component/multi_window_compat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
@@ -71,7 +70,6 @@ class _RegExpPageState extends State<RegExpPage> {
     if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
         event.logicalKey == LogicalKeyboardKey.keyW) {
       HardwareKeyboard.instance.removeHandler(onKeyEvent);
-      WindowController.fromWindowId(widget.windowId!).close();
       return true;
     }
 

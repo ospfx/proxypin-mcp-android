@@ -1,19 +1,36 @@
-# ProxyPin MCP
+# ProxyPin MCP (Android)
 
 English | [中文](README_CN.md)
 
-> **This repo is an MCP-enhanced fork of [ProxyPin](https://github.com/wanghongenpin/proxypin).**  
-> It ships a built-in **MCP Server (Model Context Protocol)** on top of the full original feature set, letting AI clients (Claude, Cursor, Windsurf, etc.) connect directly to the running proxy, read capture data, and actively control interception and modification—no extra service or Python script needed.
+> **This repo is an MCP-enhanced, Android-only fork of [ProxyPin](https://github.com/wanghongenpin/proxypin).**
+> It ships a built-in **MCP Server (Model Context Protocol)** on top of the full original capture feature set, letting AI clients (Claude, Cursor, Windsurf, etc.) connect directly to the running proxy on your Android device, read capture data, and actively control interception and modification — no extra service or Python script needed.
 
 ---
 
-## MCP Features
+## Features
 
-> **TL;DR**: Open ProxyPin, and AI can see every request you capture, help you analyze it, modify it, and release it—like Fiddler breakpoints, but controlled by AI.
+- **HTTP/HTTPS capture**: full packet capture and HTTPS decryption on Android (VPN-based, no system proxy needed)
+- **Built-in MCP Server**: AI can see, analyze, modify and release your traffic in real time
+- **QR code device pairing**: connect other phones without manual Wi-Fi proxy config
+- **Domain filtering**: intercept only the traffic you need
+- **Request search**: keyword, content-type, multi-condition search
+- **JavaScript scripts**: dynamic request/response manipulation
+- **Request rewrite**: redirect, replace body, modify headers/params
+- **Request mapping**: respond with local files/scripts instead of remote server
+- **Request decryption**: AES key auto-decrypts message bodies
+- **Request blocking**: block requests by URL pattern
+- **Breakpoint interception**: Fiddler-style breakpoints, controllable by AI
+- **History**: auto-save capture data; HAR import/export
+
+---
+
+## MCP Server
+
+> **TL;DR**: Open ProxyPin, and AI can see every request you capture, help you analyze it, modify it, and release it — like Fiddler breakpoints, but controlled by AI.
 
 ### Connection
 
-The MCP Server listens on port **9099** by default (SSE transport, no extra dependencies required).
+The MCP Server listens on port **9099** by default (SSE transport, no extra dependencies required). The port is configurable in the app (Toolbox → MCP Server) and is persisted across restarts.
 
 Configure in Claude Desktop / Cursor / Windsurf:
 
@@ -27,9 +44,11 @@ Configure in Claude Desktop / Cursor / Windsurf:
 }
 ```
 
+> Running on a phone? Use the device IP (e.g. `http://192.168.1.5:9099/sse`) or `adb forward tcp:9099 tcp:9099`.
+
 ---
 
-### Available MCP Tools (27 total)
+### Available MCP Tools (25 total)
 
 #### 1. Basic Capture Query (9 tools)
 
@@ -99,30 +118,19 @@ AI → release_intercept requestId=xxx body='{"user":"admin","pass":"test"}'
 
 ---
 
-## Automated Build & Release
+## Download & Build
 
-GitHub Actions handles multi-platform builds with no local Flutter environment needed.
+### GitHub Actions (recommended)
 
-### Workflows
-
-| File | Trigger | Output |
-|------|---------|--------|
-| `windows-build.yml` | Push to `mcp-main` / manual | Windows zip (CI validation) |
-| `release.yml` | `v*` tag push / manual | Windows zip + Setup.exe + Android APK → GitHub Release |
-
-### Release a new version
+Push a `v*` tag and the CI builds a universal release APK and attaches it to a GitHub Release:
 
 ```bash
-git tag v1.2.7
-git push origin v1.2.7
-# GitHub Actions builds and creates the Release automatically (~15-25 min)
+git tag v1.3.1
+git push origin v1.3.1
+# GitHub Actions builds proxypin-mcp-android-{ver}.apk automatically
 ```
 
-### Release Artifacts
-
-- `proxypin-mcp-windows-{ver}.zip` — extract and run
-- `proxypin-mcp-windows-{ver}-setup.exe` — Inno Setup installer (EN/ZH)
-- `proxypin-mcp-android-{ver}.apk` — Android APK (release-signed if secrets configured, otherwise debug-signed)
+Workflow: `.github/workflows/release.yml` (Android only).
 
 ### Android Signing (optional)
 
@@ -137,20 +145,31 @@ Set these Secrets in GitHub → Settings → Secrets → Actions to enable relea
 
 Without these secrets, the build automatically falls back to debug signing (sideloadable, not Play Store ready).
 
+### Local build
+
+Requirements: Flutter **3.44.8+** (Dart ≥ 3.12.2), Android SDK, Java 17.
+
+```bash
+flutter pub get
+flutter gen-l10n
+flutter build apk --release        # universal APK
+# output: build/app/outputs/flutter-apk/app-release.apk
+```
+
 ---
 
-## Original ProxyPin Features (fully preserved)
+## Project layout
 
-- **All platforms**: Windows, Mac, Android, iOS, Linux
-- **QR code device pairing**: connect phones without manual Wi-Fi proxy config
-- **Domain filtering**: intercept only the traffic you need
-- **Request search**: keyword, content-type, multi-condition search
-- **JavaScript scripts**: dynamic request/response manipulation
-- **Request rewrite**: redirect, replace body, modify headers/params
-- **Request mapping**: respond with local files/scripts instead of remote server
-- **Request decryption**: AES key auto-decrypts message bodies
-- **Request blocking**: block requests by URL pattern
-- **History**: auto-save capture data; HAR import/export
+```
+android/            Android runner (VPN, PiP, installed apps, process info plugins)
+lib/
+  main.dart         App entry (Android)
+  network/          Proxy core: capture, TLS MITM, interceptors
+    mcp/            MCP Server + tools
+  ui/mobile/        Android UI
+  storage/          History / favorites persistence
+assets/             CA cert, icons, JS built-ins
+```
 
 ---
 
@@ -166,7 +185,7 @@ git push origin mcp-main
 
 ## Upstream
 
-Original ProxyPin: [https://github.com/wanghongenpin/proxypin](https://github.com/wanghongenpin/proxypin)  
+Original ProxyPin: [https://github.com/wanghongenpin/proxypin](https://github.com/wanghongenpin/proxypin)
 Thanks to [@wanghongenpin](https://github.com/wanghongenpin) for the excellent original work.
 
 ---
@@ -175,7 +194,6 @@ Thanks to [@wanghongenpin](https://github.com/wanghongenpin) for the excellent o
 
 Apache License 2.0, same as the upstream project.
 <img alt="image"  width="580px" height="420px"  src="https://github.com/user-attachments/assets/6c1345ab-c95c-415d-ac59-470c764b59a2">.<img alt="image"  height="500px" src="https://github.com/user-attachments/assets/3c5572b0-a9e5-497c-8b42-f935e836c164">
-
 
 ### Powered by
 [![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSource)

@@ -17,9 +17,6 @@ dependencies:
   pointycastle: ^4.0.0
   logger: ^2.7.0
   date_format: ^2.0.9
-  window_manager: ^0.5.2
-  screen_retriever: ^0.2.2
-  desktop_multi_window: ^0.3.0
   path_provider: ^2.1.5
   file_picker: ^12.0.0-beta.7
   proxy_manager: ^0.0.3
@@ -28,7 +25,6 @@ dependencies:
   share_plus: ^13.2.0
   flutter_js: ^0.8.7
 #  flutter_highlight: ^0.7.0
-  flutter_desktop_context_menu: ^0.2.0
   device_info_plus: ^13.2.0
   shared_preferences: ^2.5.5
   url_launcher: ^6.3.2
@@ -41,9 +37,7 @@ dependencies:
   html: ^0.15.6
   xml: ^7.0.1
   ffi: ^2.1.0
-  win32audio: ^1.5.0
   scrollable_positioned_list_nic: ^0.0.2
-  tray_manager: ^0.5.3
   code_forge: ^10.7.1
   archive: ^4.0.0
 
@@ -60,6 +54,5 @@ flutter:
     - assets/certs/ca.crt
     - assets/certs/ca_key.pem
     - assets/icon.png
-    - assets/icon.ico
     - assets/icon_foreground.png
     - assets/js/

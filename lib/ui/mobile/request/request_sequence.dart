@@ -11,7 +11,6 @@ import 'package:proxypin/network/http/http_client.dart';
 import 'package:proxypin/ui/component/multi_select_controller.dart';
 import 'package:proxypin/ui/component/selection_action_bar.dart';
 import 'package:proxypin/ui/component/utils.dart';
-import 'package:proxypin/ui/desktop/request/request.dart';
 import 'package:proxypin/ui/mobile/request/request.dart';
 import 'package:proxypin/utils/export_request.dart';
 import 'package:proxypin/utils/keyword_highlight.dart';

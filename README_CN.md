@@ -1,20 +1,38 @@
-# ProxyPin MCP
+# ProxyPin MCP（安卓版）
 
 [English](README.md) | 中文
 
-> **本仓库是 [ProxyPin](https://github.com/wanghongenpin/proxypin) 的 MCP 增强版**，在保留原版全部抓包功能的基础上，内置了完整的 **MCP Server（Model Context Protocol）**，让 AI（Claude、Cursor、Windsurf 等）能够直接连接、读取、操控抓包数据，实现自动化流量分析、改包测试和安全审计。
+> **本仓库是 [ProxyPin](https://github.com/wanghongenpin/proxypin) 的 MCP 增强版，仅支持 Android 平台。**
+> 在保留原版全部抓包功能的基础上，内置了完整的 **MCP Server（Model Context Protocol）**，让 AI（Claude、Cursor、Windsurf 等）能够直接连接安卓设备上运行的代理，读取抓包数据，并主动操控拦截与改包——无需任何额外服务或 Python 脚本。
 
 ---
 
-## MCP 核心功能
+## 功能特性
+
+- **HTTP/HTTPS 抓包**：基于 VPN 的安卓全量抓包与 HTTPS 解密（无需设置系统代理）
+- **内置 MCP Server**：AI 可实时查看、分析、修改并放行你的流量
+- **扫码互联**：其他手机扫码即可连接，无需手动配置 Wi-Fi 代理
+- **域名过滤**：只拦截你关心的流量
+- **请求搜索**：关键词、Content-Type、多条件组合搜索
+- **JavaScript 脚本**：动态修改请求/响应
+- **请求重写**：重定向、替换 Body、修改 Header/参数
+- **请求映射**：用本地文件/脚本替代远程服务器响应
+- **请求解密**：配置 AES 密钥自动解密报文
+- **请求屏蔽**：按 URL 规则屏蔽请求
+- **断点拦截**：类 Fiddler 断点，可由 AI 控制
+- **历史记录**：自动保存抓包数据，支持 HAR 导入导出
+
+---
+
+## MCP Server
 
 > **一句话**：打开 ProxyPin，AI 就能看到你在抓什么包，并且能帮你分析、改包、放行——就像 Fiddler 断点，但由 AI 控制。
 
 ### 连接方式
 
-ProxyPin MCP Server 默认监听 **9099** 端口，SSE 传输协议，无需额外安装任何依赖。
+MCP Server 默认监听 **9099** 端口（SSE 传输协议，无需额外依赖）。端口可在 App 内修改（工具箱 → MCP Server），修改后会自动保存，重启不丢失。
 
-在 Claude Desktop / Cursor 等 AI 工具中配置：
+在 Claude Desktop / Cursor / Windsurf 中配置：
 
 ```json
 {
@@ -26,9 +44,11 @@ ProxyPin MCP Server 默认监听 **9099** 端口，SSE 传输协议，无需额�
 }
 ```
 
+> 在手机上运行？使用设备 IP（如 `http://192.168.1.5:9099/sse`），或通过 `adb forward tcp:9099 tcp:9099` 转发到电脑。
+
 ---
 
-### 已实现的 MCP 工具（27 个）
+### 已实现的 MCP 工具（25 个）
 
 #### 一、基础抓包查询（9 个）
 
@@ -58,17 +78,18 @@ ProxyPin MCP Server 默认监听 **9099** 端口，SSE 传输协议，无需额�
 | 工具 | 说明 |
 |------|------|
 | `add_breakpoint` | 添加断点规则（URL 正则 + HTTP 方法 + 拦截请求或响应阶段） |
-| `list_breakpoints` | 列出所有断点规则及启用状态 |
-| `remove_breakpoint` | 删除指定断点规则 |
+| `list_breakpoints` | 列出所有规则及启用状态 |
+| `remove_breakpoint` | 按索引删除规则 |
 | `get_pending_intercepts` | 查看当前被暂停等待放行的请求/响应（含完整数据） |
-| `release_intercept` | 放行拦截的请求/响应，可修改 Headers、Body、StatusCode，或直接中止 |
+| `release_intercept` | 放行拦截（可修改 Headers、Body、状态码，或直接中止） |
 
-**典型用法：**
+**典型工作流：**
 ```
-AI: add_breakpoint url=".*api/login.*"
-→ 触发 App 登录
-→ AI: get_pending_intercepts  ← 读到被拦截的完整请求
-→ AI: release_intercept requestId=xxx body='{"user":"admin","pass":"123456"}'  ← 改包放行
+AI → add_breakpoint url=".*api/login.*"
+   在 App 中触发登录
+AI → get_pending_intercepts        ← 读取完整的拦截请求
+AI → release_intercept requestId=xxx body='{"user":"admin","pass":"test"}'
+   修改后的请求被转发到服务器
 ```
 
 #### 四、重写规则管理（3 个）
@@ -76,55 +97,44 @@ AI: add_breakpoint url=".*api/login.*"
 | 工具 | 说明 |
 |------|------|
 | `list_rewrite_rules` | 列出所有持久化重写规则 |
-| `add_rewrite_rule` | 添加规则：替换响应/请求体、修改 Header、重定向（5 种类型） |
-| `remove_rewrite_rule` | 删除指定规则 |
+| `add_rewrite_rule` | 添加规则：替换 Body/Header、修改参数、重定向（5 种类型） |
+| `remove_rewrite_rule` | 按索引删除规则 |
 
 #### 五、JS 脚本管理（3 个）
 
 | 工具 | 说明 |
 |------|------|
 | `list_scripts` | 列出所有 JS 拦截脚本 |
-| `get_script_content` | 读取脚本代码 |
-| `create_or_update_script` | AI 直接编写/修改 JS 脚本（含 `onRequest`/`onResponse`），持久生效 |
+| `get_script_content` | 读取脚本源码 |
+| `create_or_update_script` | AI 编写/更新包含 `onRequest`/`onResponse` 的 JS 脚本，立即生效 |
 
 #### 六、安全分析（3 个）
 
 | 工具 | 说明 |
 |------|------|
-| `find_sensitive_data` | 扫描手机号/身份证/邮箱/JWT/Bearer Token/API Key/密码字段/内网 IP |
-| `analyze_auth` | 提取所有 Auth Header、API Key、Cookie Session Token，自动解析 JWT Payload |
-| `extract_api_endpoints` | 路径归组（数字/UUID 替换占位符），统计调用频次和状态码分布 |
+| `find_sensitive_data` | 扫描手机号、身份证、邮箱、JWT、Bearer Token、API Key、密码、内网 IP |
+| `analyze_auth` | 提取 Auth Header、API Key Header、Cookie 会话 Token，自动解码 JWT 载荷 |
+| `extract_api_endpoints` | 归组 API 路径（ID/UUID 替换为占位符），统计调用次数与状态码 |
 
 ---
 
-## 自动化构建与发布
+## 下载与构建
 
-本仓库使用 GitHub Actions 实现多平台自动构建，无需本地配置 Flutter 编译环境。
+### GitHub Actions 构建（推荐）
 
-### 工作流说明
-
-| 工作流文件 | 触发条件 | 产物 |
-|-----------|---------|------|
-| `windows-build.yml` | `mcp-main` 分支推送 / 手动触发 | Windows zip（CI 验证） |
-| `release.yml` | `v*` tag 推送 / 手动触发 | Windows zip + Setup.exe + Android APK → GitHub Release |
-
-### 发布新版本
+推送 `v*` 标签，CI 自动构建通用 release APK 并附加到 GitHub Release：
 
 ```bash
-git tag v1.2.7
-git push origin v1.2.7
-# GitHub Actions 自动构建并创建 Release，约 15-25 分钟
+git tag v1.3.1
+git push origin v1.3.1
+# GitHub Actions 自动构建 proxypin-mcp-android-{ver}.apk
 ```
 
-### Release 产物
+工作流：`.github/workflows/release.yml`（仅 Android）。
 
-- `proxypin-mcp-windows-{ver}.zip` — 直接解压运行
-- `proxypin-mcp-windows-{ver}-setup.exe` — Inno Setup 安装包（支持中英双语）
-- `proxypin-mcp-android-{ver}.apk` — Android APK（Release 签名 / Debug 签名）
+### 安卓签名（可选）
 
-### Android 签名配置（可选）
-
-在 GitHub → Settings → Secrets → Actions 中配置以下 Secret，构建将自动切换为 Release 签名：
+在 GitHub → Settings → Secrets → Actions 中配置以下 Secret 启用 release 签名：
 
 | Secret | 说明 |
 |--------|------|
@@ -133,28 +143,37 @@ git push origin v1.2.7
 | `ANDROID_KEY_ALIAS` | keyAlias |
 | `ANDROID_KEY_PASSWORD` | keyPassword |
 
----
+未配置时自动回退为 debug 签名（可侧载安装，不可上架 Play 商店）。
 
-## ProxyPin 原版核心特性
+### 本地构建
 
-本仓库完整保留原版所有能力：
+环境要求：Flutter **3.44.8+**（Dart ≥ 3.12.2）、Android SDK、Java 17。
 
-- **全平台支持**：Windows、Mac、Android、iOS、Linux
-- **手机扫码连接**：无需手动配置 Wifi 代理
-- **域名过滤**：精准拦截目标流量
-- **请求搜索**：关键词、响应类型多维搜索
-- **JS 脚本**：编写脚本动态处理请求/响应
-- **请求重写**：重定向、替换报文、修改参数
-- **请求映射**：本地文件/脚本替代远程响应
-- **请求解密**：AES 密钥自动解密消息体
-- **请求屏蔽**：URL 规则屏蔽请求
-- **历史记录**：自动保存流量，支持 HAR 导出/导入
+```bash
+flutter pub get
+flutter gen-l10n
+flutter build apk --release        # 通用 APK
+# 输出：build/app/outputs/flutter-apk/app-release.apk
+```
 
 ---
 
-## 与上游同步
+## 项目结构
 
-本仓库通过 `upstream` remote 追踪原作者更新：
+```
+android/            安卓平台层（VPN、画中画、应用列表、进程信息插件）
+lib/
+  main.dart         App 入口（Android）
+  network/          代理核心：抓包、TLS 中间人、拦截器链
+    mcp/            MCP Server 与工具实现
+  ui/mobile/        安卓 UI
+  storage/          历史记录 / 收藏持久化
+assets/             CA 证书、图标、内置 JS
+```
+
+---
+
+## 同步上游
 
 ```bash
 git fetch upstream
@@ -167,11 +186,11 @@ git push origin mcp-main
 ## 上游项目
 
 原版 ProxyPin：[https://github.com/wanghongenpin/proxypin](https://github.com/wanghongenpin/proxypin)
-
-感谢原作者 [@wanghongenpin](https://github.com/wanghongenpin) 的出色工作。
+感谢 [@wanghongenpin](https://github.com/wanghongenpin) 的优秀原作。
 
 ---
 
-## License
+## 许可证
 
-Apache License 2.0，与上游保持一致。
+Apache License 2.0，与上游项目一致。
+<img alt="image"  width="580px" height="420px"  src="https://github.com/user-attachments/assets/6c1345ab-c95c-415d-ac59-470c764b59a2">.<img alt="image"  height="500px" src="https://github.com/user-attachments/assets/3c5572b0-a9e5-497c-8b42-f935e836c164">
