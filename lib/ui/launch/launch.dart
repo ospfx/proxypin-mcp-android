@@ -81,8 +81,10 @@ class _SocketLaunchState extends State<SocketLaunch> with WidgetsBindingObserver
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      if (widget.proxyServer.isRunning) {
-        widget.proxyServer.retryBind();
+      if (widget.proxyServer.isRunning && started) {
+        widget.proxyServer.retryBind().catchError((e) {
+          logger.e('retryBind failed on resumed', error: e);
+        });
       }
 
       if (Platforms.isMobile() && started == false) {
@@ -120,9 +122,19 @@ class _SocketLaunchState extends State<SocketLaunch> with WidgetsBindingObserver
 
             widget.proxyServer.stop().then((value) {
               widget.onStop?.call();
-              setState(() {
-                started = !started;
-              });
+              if (mounted) {
+                setState(() {
+                  started = !started;
+                });
+              }
+            }).catchError((e) {
+              logger.e("stop proxy server failed", error: e);
+              if (mounted) {
+                FlutterToastr.show(localizations.fail, context, duration: 3);
+                setState(() {
+                  started = false;
+                });
+              }
             });
           } else {
             start();

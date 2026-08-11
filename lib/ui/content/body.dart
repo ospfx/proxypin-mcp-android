@@ -22,6 +22,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:get/get.dart';
 import 'package:image_pickers/image_pickers.dart';
 import 'package:proxypin/l10n/app_localizations.dart';
 import 'package:proxypin/network/components/manager/request_rewrite_manager.dart';
@@ -80,10 +81,14 @@ class HttpBodyState extends State<HttpBodyWidget> {
   bool showDecoded = false;
   CryptoDecodedResult? decoded;
 
+  //当前请求是否命中已启用的重写规则
+  final RxBool rewriteEnabled = false.obs;
+
   @override
   void initState() {
     super.initState();
     _loadDecoded();
+    _loadRewriteEnabled();
   }
 
   @override
@@ -92,8 +97,26 @@ class HttpBodyState extends State<HttpBodyWidget> {
     if (oldWidget.httpMessage?.requestId != widget.httpMessage?.requestId) {
       showDecoded = false;
       decoded = null;
+      rewriteEnabled.value = false;
       _loadDecoded();
+      _loadRewriteEnabled();
     }
+  }
+
+  ///计算当前请求是否命中已启用的重写规则
+  Future<void> _loadRewriteEnabled() async {
+    final message = widget.httpMessage;
+    if (message == null || widget.hideRequestRewrite) return;
+
+    HttpRequest? request = message is HttpRequest ? message : (message as HttpResponse).request;
+    if (request == null) return;
+
+    var types = message is HttpRequest
+        ? [RuleType.requestReplace, RuleType.requestUpdate, RuleType.redirect]
+        : [RuleType.responseReplace, RuleType.responseUpdate];
+
+    var requestRewrites = await RequestRewriteManager.instance;
+    rewriteEnabled.value = requestRewrites.getRewriteRule(request.domainPath, types) != null;
   }
 
   /// 加载解密内容
@@ -254,7 +277,8 @@ class HttpBodyState extends State<HttpBodyWidget> {
     final rewriteBtn = IconButton(
       visualDensity: visualDensity,
       iconSize: 16,
-      icon: const Icon(Icons.edit_document),
+      icon: Obx(() => Icon(Icons.edit_document,
+          color: rewriteEnabled.value ? Colors.deepOrangeAccent : null)),
       tooltip: localizations.requestRewrite,
       onPressed: showRequestRewrite,
     );
@@ -298,7 +322,10 @@ class HttpBodyState extends State<HttpBodyWidget> {
     if (isMobile && cryptoToggle != null) {
       final overflowItems = <PopupMenuEntry<String>>[];
       if (!widget.hideRequestRewrite) {
-        overflowItems.add(PopupMenuItem(value: 'rewrite', child: Text(localizations.requestRewrite)));
+        overflowItems.add(PopupMenuItem(
+            value: 'rewrite',
+            child: Obx(() => Text(localizations.requestRewrite,
+                style: rewriteEnabled.value ? TextStyle(color: Theme.of(context).colorScheme.primary) : null))));
       }
       overflowItems.add(PopupMenuItem(value: 'encode', child: Text(localizations.encode)));
       if (!inNewWindow) {

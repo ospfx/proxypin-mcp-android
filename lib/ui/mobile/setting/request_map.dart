@@ -13,7 +13,7 @@ import 'package:proxypin/ui/mobile/setting/request_map/map_scipt.dart';
 import 'package:proxypin/utils/lang.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../network/util/logger.dart';
+import '../../../network/util/logger.dart';
 import '../../../utils/platform.dart';
 
 bool _refresh = false;

@@ -25,10 +25,12 @@ import 'package:proxypin/l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:proxypin/network/bin/server.dart';
 import 'package:proxypin/network/channel/host_port.dart';
+import 'package:proxypin/network/components/manager/environment_manager.dart';
 import 'package:proxypin/network/http/content_type.dart';
 import 'package:proxypin/network/http/http.dart';
 import 'package:proxypin/network/http/http_headers.dart';
 import 'package:proxypin/network/http/http_client.dart';
+import 'package:proxypin/ui/component/env_var_highlight.dart';
 import 'package:proxypin/ui/component/search/finder.dart';
 import 'package:proxypin/ui/component/state_component.dart';
 import 'package:proxypin/ui/configuration.dart';
@@ -244,13 +246,14 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
     var currentState = requestLineKey.currentState!;
     var headers = requestKey.currentState?.getHeaders();
     var requestBody = requestKey.currentState?.getBody();
-    String url = currentState.requestUrl.text;
+    String url = _renderEnv(currentState.requestUrl.text);
+    _renderHeadersInPlace(headers);
 
     HttpRequest request = HttpRequest(currentState.requestMethod, Uri.parse(url).toString(),
         protocolVersion: this.request?.protocolVersion ?? "HTTP/1.1");
 
     request.headers.addAll(headers);
-    request.body = requestBody == null ? null : utf8.encode(requestBody);
+    request.body = requestBody == null ? null : utf8.encode(_renderEnv(requestBody));
 
     var proxyInfo = widget.proxyServer?.isRunning == true ? ProxyInfo.of("127.0.0.1", widget.proxyServer?.port) : null;
 
@@ -278,25 +281,39 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
       var currentState = requestLineKey.currentState!;
       var headers = requestKey.currentState?.getHeaders();
       var requestBody = requestKey.currentState?.getBody();
-      String url = currentState.requestUrl.text;
+      String url = _renderEnv(currentState.requestUrl.text);
+      _renderHeadersInPlace(headers);
 
       HttpRequest newRequest = request!.copy(uri: url);
       newRequest.method = currentState.requestMethod;
       newRequest.headers.clear();
       newRequest.headers.addAll(headers);
-      newRequest.body = requestBody == null ? null : utf8.encode(requestBody);
+      newRequest.body = requestBody == null ? null : utf8.encode(_renderEnv(requestBody));
       widget.onExecuteRequest?.call(newRequest);
     } else if (widget.source == RequestEditorSource.breakpointResponse) {
       var headers = responseKey.currentState?.getHeaders();
       var responseBody = responseKey.currentState?.getBody();
+      _renderHeadersInPlace(headers);
 
       if (response == null) return;
       HttpResponse newResponse = response!.copy();
       newResponse.headers.clear();
       newResponse.headers.addAll(headers);
-      newResponse.body = responseBody == null ? null : utf8.encode(responseBody);
+      newResponse.body = responseBody == null ? null : utf8.encode(_renderEnv(responseBody));
       widget.onExecuteResponse?.call(newResponse);
     }
+  }
+
+  /// 用当前激活的环境变量渲染 `{{name}}`。EnvironmentManager 未加载或未启用时返回原值。
+  static String _renderEnv(String input) => EnvironmentManager.tryRender(input) ?? input;
+
+  /// 就地渲染 headers 每一项的 value。
+  static void _renderHeadersInPlace(HttpHeaders? headers) {
+    headers?.forEach((_, values) {
+      for (int i = 0; i < values.length; i++) {
+        values[i] = _renderEnv(values[i]);
+      }
+    });
   }
 }
 
@@ -688,7 +705,7 @@ class _RequestLine extends StatefulWidget {
 }
 
 class _RequestLineState extends State<_RequestLine> {
-  TextEditingController requestUrl = TextEditingController(text: "");
+  EnvHighlightTextEditingController requestUrl = EnvHighlightTextEditingController(text: "");
   HttpMethod requestMethod = HttpMethod.get;
 
   @override
@@ -1185,7 +1202,8 @@ class KeyValState extends State<KeyValWidget> with AutomaticKeepAliveClientMixin
       const SizedBox(width: 8),
       Expanded(
         flex: 6,
-        child: Text(keyVal.value, style: const TextStyle(fontSize: 13), maxLines: 5, overflow: TextOverflow.ellipsis),
+        child: buildEnvHighlightText(context, keyVal.value,
+            style: const TextStyle(fontSize: 13), maxLines: 5, overflow: TextOverflow.ellipsis),
       ),
     ]);
   }

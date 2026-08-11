@@ -30,7 +30,14 @@ import 'l10n/app_localizations.dart';
 ///@author wanghongen
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  await RustLib.init();
+  try {
+    await RustLib.init();
+  } catch (e) {
+    // code_forge Rust FFI initialization may fail on iOS 14.x due to
+    // deployment-target / cargokit-build incompatibilities. Degrade
+    // gracefully instead of crashing the whole app at startup.
+    print('RustLib.init failed: $e');
+  }
 
   var instance = AppConfiguration.instance;
 

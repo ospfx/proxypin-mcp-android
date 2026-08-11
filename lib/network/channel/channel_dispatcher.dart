@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:proxypin/native/process_info.dart';
 import 'package:proxypin/network/channel/channel.dart';
 import 'package:proxypin/network/channel/channel_context.dart';
 import 'package:proxypin/network/handle/relay_handle.dart';
@@ -26,6 +28,11 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
 
   //h2 stream dependency Sequential exec
   SequentialTaskQueue taskQueue = SequentialTaskQueue();
+
+  //正在处理中的读事件(HTTP/1.1 不走 taskQueue). 两处 listen(Network.listen / ChannelDispatcher.listen)
+  //都汇聚到本 dispatcher 的 channelRead/channelInactive, 故在此层等待可覆盖所有连接类型.
+  //channelInactive 需等待其完成再关闭对端连接, 避免服务端关闭时提前关闭客户端连接导致 socket hang up.
+  final Set<Completer<void>> _pendingReads = {};
 
   void handle(Decoder decoder, Encoder encoder, ChannelHandler handler) {
     this.encoder = encoder;
@@ -86,6 +93,10 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
 
   @override
   Future<void> channelRead(ChannelContext channelContext, Channel channel, Uint8List msg) async {
+    //同步注册: 在首个 await 之前登记, 保证 onDone(channelInactive) 触发时本次读事件已在集合中
+    final pending = Completer<void>();
+    _pendingReads.add(pending);
+
     //手机扫码连接转发远程
     HostAndPort? remote = channelContext.getAttribute(AttributeKeys.remote);
     buffer.add(msg);
@@ -148,6 +159,8 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
           data.hostAndPort?.host = data.headers.host!;
         }
 
+        await _fixAndroidVpnPort(channelContext, channel, data);
+
         data.processInfo ??= await ProcessInfoUtils.getProcessByPort(channel.remoteSocketAddress, data.remoteDomain()!);
       }
 
@@ -169,8 +182,50 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
       } else {
         await handler.channelRead(channelContext, channel, data!);
       }
+
+      // h2 streaming 请求：HEADERS 帧 emit 后，buffer 里可能还留着已到达的 DATA
+      // 帧字节（HEADERS 之后同一次 socket 读入的内容）。此时不再触发新的
+      // channelRead（Chrome 已经把整段字节发到 socket），需要主动把剩余字节
+      // 交给 decoder，让 DATA 帧走 forward 透传到远端。
+      // 只做一次：递归调用里 decodeResult.data == null，走完 forward 后 return。
+      if (data is HttpMessage && data.streamingBody && buffer.isReadable()) {
+        Channel? remote = channelContext.getAttribute(channel.id);
+        if (remote == null) {
+          logger.e("[$channel] h2 streaming but remoteChannel is null, drop buffered data");
+          buffer.clear();
+        } else {
+          await channelRead(channelContext, channel, Uint8List(0));
+        }
+      }
     } catch (error, trace) {
       onError(channelContext, channel, error, trace: trace);
+    } finally {
+      _pendingReads.remove(pending);
+      if (!pending.isCompleted) pending.complete();
+    }
+  }
+
+  /// 修正 Android VPN 透明代理明文 HTTP 请求的目标端口。
+  ///
+  /// 客户端把请求当作直连发出时（uri 是路径而非绝对 URI），端口只能从 Host 头解析；
+  /// 若 Host 头未携带端口（例如 `curl -H "Host: x" http://x:10120/`），
+  /// [HostAndPort.of] 会兜底成 80，导致上游连接被拨到错误端口（#530）。
+  /// 此时向 VPN 侧查真实目的端口进行覆盖。
+  ///
+  /// SSL / HTTP2 走 SNI 嗅探或 `:authority`，已经拿到正确端口；
+  /// 其它明文情况（绝对 URI / Host 头自带端口）[getHostAndPort] 也能处理。
+  Future<void> _fixAndroidVpnPort(ChannelContext channelContext, Channel channel, HttpRequest data) async {
+    if (!Platform.isAndroid ||
+        channel.isSsl ||
+        !data.uri.startsWith("/") ||
+        data.headers.host?.contains(":") == true ||
+        data.hostAndPort == null) {
+      return;
+    }
+
+    final vpnRemote = await ProcessInfoPlugin.getRemoteAddressByPort(channel.remoteSocketAddress.port);
+    if (vpnRemote != null && vpnRemote.port != data.hostAndPort!.port) {
+      data.hostAndPort = data.hostAndPort!.copyWith(port: vpnRemote.port);
     }
   }
 
@@ -260,6 +315,10 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
   @override
   channelInactive(ChannelContext channelContext, Channel channel) async {
     await taskQueue.waitForAll();
+    //等待正在处理中的读事件完成(例如 HTTP/1.1 响应写回客户端), 避免服务端关闭时提前关闭对端连接导致 socket hang up
+    while (_pendingReads.isNotEmpty) {
+      await Future.wait(_pendingReads.map((c) => c.future).toList());
+    }
     channel.isOpen = false;
     handler.channelInactive(channelContext, channel);
   }
