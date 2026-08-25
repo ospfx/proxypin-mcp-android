@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:code_forge/code_forge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:proxypin/l10n/app_localizations.dart';
 
 const EdgeInsetsGeometry _kFindMargin = EdgeInsets.only(right: 10);
 const double _kFindPanelWidth = 360;
@@ -78,7 +79,7 @@ class FindPanelView extends StatelessWidget implements PreferredSizeWidget {
                     minHeight: preferredSize.height,
                     maxHeight: preferredSize.height,
                   ),
-                  tooltip: 'Toggle Replace',
+                  tooltip: AppLocalizations.of(context)!.toggleReplace,
                   onPressed: () {
                     controller.toggleReplaceMode();
                     // if (controller.isReplaceMode) {
@@ -154,17 +155,17 @@ class FindPanelView extends StatelessWidget implements PreferredSizeWidget {
             children: [
               _buildIconButton(
                 icon: Icons.arrow_upward,
-                tooltip: 'Previous',
+                tooltip: AppLocalizations.of(context)!.previous,
                 onPressed: controller.matchCount == 0 ? null : controller.previous,
               ),
               _buildIconButton(
                 icon: Icons.arrow_downward,
-                tooltip: 'Next',
+                tooltip: AppLocalizations.of(context)!.next,
                 onPressed: controller.matchCount == 0 ? null : controller.next,
               ),
               _buildIconButton(
                 icon: Icons.close,
-                tooltip: 'Close',
+                tooltip: AppLocalizations.of(context)!.close,
                 onPressed: controller.toggleActive,
               ),
               const SizedBox(width: 6),
@@ -195,12 +196,12 @@ class FindPanelView extends StatelessWidget implements PreferredSizeWidget {
         ),
         _buildIconButton(
           icon: Icons.done,
-          tooltip: 'Replace',
+          tooltip: AppLocalizations.of(context)!.replace,
           onPressed: controller.matchCount == 0 ? null : controller.replace,
         ),
         _buildIconButton(
           icon: Icons.done_all,
-          tooltip: 'Replace All',
+          tooltip: AppLocalizations.of(context)!.replaceAll,
           onPressed: controller.matchCount == 0 ? null : controller.replaceAll,
         ),
       ],

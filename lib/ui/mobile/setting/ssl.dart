@@ -196,9 +196,9 @@ class _MobileSslState extends State<MobileSslWidget> {
             Padding(
               padding: const EdgeInsets.all(10),
               child: TextField(
-                decoration: const InputDecoration(
-                  hintText: "Enter the password of the p12 file",
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: localizations.p12PasswordHint,
+                  border: const OutlineInputBorder(),
                 ),
                 onChanged: (val) => password = val,
               ),
@@ -236,10 +236,10 @@ class _MobileSslState extends State<MobileSslWidget> {
             Padding(
               padding: const EdgeInsets.all(10),
               child: TextField(
-                decoration: const InputDecoration(
-                  hintStyle: TextStyle(color: Colors.grey),
-                  hintText: "Enter a password to protect p12 file",
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  hintText: localizations.p12PasswordSetHint,
+                  border: const OutlineInputBorder(),
                 ),
                 onChanged: (val) => password = val,
               ),

@@ -551,7 +551,7 @@ class _MobileCryptoRuleEditPageState extends State<MobileCryptoRuleEditPage> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         _kvDropdown(
-                          label: 'Mode',
+                          label: l10n.aesMode,
                           child: DropdownButton<String>(
                             value: mode,
                             items: const [
@@ -562,7 +562,7 @@ class _MobileCryptoRuleEditPageState extends State<MobileCryptoRuleEditPage> {
                           ),
                         ),
                         _kvDropdown(
-                          label: 'Padding',
+                          label: l10n.aesPadding,
                           child: DropdownButton<String>(
                             value: padding,
                             items: const [
@@ -573,7 +573,7 @@ class _MobileCryptoRuleEditPageState extends State<MobileCryptoRuleEditPage> {
                           ),
                         ),
                         _kvDropdown(
-                          label: 'Key Length',
+                          label: l10n.aesKeyLength,
                           child: DropdownButton<int>(
                             value: length,
                             items: const [

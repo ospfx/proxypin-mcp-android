@@ -50,7 +50,7 @@ class Websocket extends StatelessWidget {
                     Text(message.isFromClient ? 'C' : 'S', style: const TextStyle(fontSize: 18, color: Colors.white))));
 
         var previewButton = IconButton(
-          tooltip: "Preview",
+          tooltip: localizations.preview,
           onPressed: () {
             showDialog(context: context, builder: (context) => _PreviewDialog(bytes: message.payloadData));
           },

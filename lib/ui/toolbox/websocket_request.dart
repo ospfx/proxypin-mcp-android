@@ -244,7 +244,7 @@ class _WebSocketRequestPageState extends State<WebSocketRequestPage> {
           centerTitle: true,
           actions: [
             IconButton(
-              tooltip: 'Clear messages',
+              tooltip: localizations.clearMessages,
               icon: const Icon(Icons.delete),
               onPressed: () => _clearMessages(),
             ),
@@ -377,7 +377,7 @@ class _WebSocketRequestPageState extends State<WebSocketRequestPage> {
               duration: const Duration(milliseconds: 220),
               opacity: !_isNearBottom ? 1.0 : 0.0,
               child: Semantics(
-                label: 'Jump to latest messages',
+                label: localizations.jumpToLatestMessages,
                 button: true,
                 child: Material(
                   elevation: 10,

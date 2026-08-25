@@ -719,7 +719,7 @@ class _ScriptEditState extends State<ScriptEdit> {
                                   decoration: BoxDecoration(
                                       color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.35),
                                       borderRadius: BorderRadius.circular(4)),
-                                  child: const Text('Read-only', style: TextStyle(fontSize: 11))),
+                                  child: Text(localizations.readOnly, style: const TextStyle(fontSize: 11))),
                             const Spacer(),
                             Tooltip(
                                 message: localizations.copy,

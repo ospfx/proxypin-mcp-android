@@ -104,7 +104,7 @@ class SearchConditionsState extends State<SearchConditions> {
                       }
                     },
                     children: [
-                      Tooltip(message: 'Case Sensitive', child: const Text('Aa')),
+                      Tooltip(message: localizations.caseSensitive, child: const Text('Aa')),
                       Tooltip(message: localizations.regExp, child: const Text('.*')),
                     ],
                   )),

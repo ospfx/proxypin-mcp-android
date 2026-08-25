@@ -32,6 +32,9 @@ import '../component/search/search_controller.dart';
 /// - text mode: raw header lines in a read-only code field
 class HeadersWidget extends StatefulWidget {
   final String title;
+
+  /// 显示用标题（已本地化）；为空时回退到 '<title> Headers'
+  final String? titleText;
   final HttpMessage? message;
   final TextStyle valueTextStyle;
   final bool initiallyExpanded;
@@ -43,6 +46,7 @@ class HeadersWidget extends StatefulWidget {
   const HeadersWidget({
     super.key,
     required this.title,
+    this.titleText,
     required this.message,
     this.valueTextStyle = const TextStyle(fontSize: 14),
     this.initiallyExpanded = true,
@@ -104,7 +108,7 @@ class _HeadersWidgetState extends State<HeadersWidget> {
     return IconButton(
       visualDensity: VisualDensity.comfortable,
       iconSize: 16,
-      tooltip: isText ? 'Headers: Text' : 'Headers: Table',
+      tooltip: isText ? AppLocalizations.of(context)!.headerViewText : AppLocalizations.of(context)!.headerViewTable,
       onPressed: () => setMode(!isText),
       icon: Icon(isText ? Icons.text_snippet : Icons.table_rows, color: Theme.of(context).iconTheme.color),
     );
@@ -119,8 +123,8 @@ class _HeadersWidgetState extends State<HeadersWidget> {
       title: Row(
         children: [
           Expanded(
-              child:
-                  Text('${widget.title} Headers', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14))),
+              child: Text(widget.titleText ?? '${widget.title} ${AppLocalizations.of(context)!.headers}',
+                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14))),
           _buildCopyButton(context),
           _buildHeaderModeToggle(context),
         ],

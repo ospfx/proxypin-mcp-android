@@ -194,7 +194,7 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
             child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
           IconButton(icon: Icon(Icons.search, size: 20), onPressed: () => findController.toggleActive()),
           IconButton(
-            tooltip: 'JSON Format',
+            tooltip: localizations.jsonFormat,
             icon:
                 Icon(Icons.data_object, size: 20, color: jsonFormatted ? Theme.of(context).colorScheme.primary : null),
             onPressed: () {
@@ -296,7 +296,7 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
 
     return ListView(physics: const ClampingScrollPhysics(), children: [
       Row(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.center, children: [
-        const Text('Header'),
+        Text(localizations.headers),
         const SizedBox(width: 10),
         Expanded(
             child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
@@ -355,10 +355,10 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
           ])),
         ]),
         const SizedBox(height: 15),
-        textField("Path", rewriteItem.path, "${localizations.example} /api/v1/user",
+        textField(localizations.path, rewriteItem.path, "${localizations.example} /api/v1/user",
             onChanged: (val) => rewriteItem.path = val),
         const SizedBox(height: 15),
-        textField("URL${localizations.param}", rewriteItem.queryParam, "${localizations.example} id=1&name=2",
+        textField("URL ${localizations.param}", rewriteItem.queryParam, "${localizations.example} id=1&name=2",
             onChanged: (val) => rewriteItem.queryParam = val),
       ],
     );

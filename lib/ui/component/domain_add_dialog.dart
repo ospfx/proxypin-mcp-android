@@ -28,7 +28,7 @@ class DomainAddDialog extends StatelessWidget {
                 child: Column(children: <Widget>[
                   TextFormField(
                       initialValue: host,
-                      decoration: const InputDecoration(labelText: 'Host', hintText: '*.example.com'),
+                      decoration: InputDecoration(labelText: AppLocalizations.of(context)!.host, hintText: '*.example.com'),
                       validator: (val) => val == null || val.trim().isEmpty ? localizations.cannotBeEmpty : null,
                       onChanged: (val) => host = val)
                 ]))),

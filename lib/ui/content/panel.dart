@@ -73,12 +73,7 @@ class NetworkTabController extends StatefulWidget {
 }
 
 class NetworkTabState extends State<NetworkTabController> with SingleTickerProviderStateMixin {
-  final tabs = [
-    'General',
-    'Request',
-    'Response',
-    'Cookies',
-  ];
+  late List<String> tabs = ['General', 'Request', 'Response', 'Cookies'];
 
   final TextStyle textStyle = const TextStyle(fontSize: 14);
   late TabController _tabController;
@@ -114,6 +109,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
   @override
   Widget build(BuildContext context) {
+    tabs = [localizations.general, localizations.request, localizations.response, localizations.cookies];
     bool isWebSocket = widget.request.get()?.isWebSocket == true;
     bool isSse = widget.response.get()?.headers.contentType.toLowerCase().startsWith('text/event-stream') == true;
     bool isStreamMessages = isWebSocket || isSse;
@@ -122,7 +118,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     } else if (isWebSocket) {
       tabs[tabs.length - 1] = "WebSocket";
     } else {
-      tabs[tabs.length - 1] = 'Cookies';
+      tabs[tabs.length - 1] = localizations.cookies;
     }
 
     var tabBar = TabBar(
@@ -183,7 +179,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     return SingleChildScrollView(
         controller: scrollController,
         child: Column(children: [
-          RowWidget("Path", path),
+          RowWidget(localizations.path, path),
           RequestParams(widget.request),
           ...message(widget.request.get(), "Request", scrollController)
         ]));
@@ -198,19 +194,27 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     return SingleChildScrollView(
         controller: scrollController,
         child: Column(children: [
-          RowWidget("StatusCode", widget.response.get()?.status.toString()),
+          RowWidget(localizations.statusCode, widget.response.get()?.status.toString()),
           ...message(widget.response.get(), "Response", scrollController)
         ]));
   }
 
   List<Widget> message(HttpMessage? message, String type, ScrollController scrollController) {
+    bool isRequest = type == "Request";
     Widget bodyWidgets = HttpBodyWidget(
-        key: type == "Request" ? requestHttpBodyKey : responseHttpBodyKey,
+        key: isRequest ? requestHttpBodyKey : responseHttpBodyKey,
         hideRequestRewrite: widget.windowId != null,
         httpMessage: message,
         scrollController: scrollController);
 
-    return [HeadersWidget(title: type, message: message, valueTextStyle: textStyle), bodyWidgets];
+    return [
+      HeadersWidget(
+          title: type,
+          titleText: isRequest ? localizations.requestHeader : localizations.responseHeader,
+          message: message,
+          valueTextStyle: textStyle),
+      bodyWidgets
+    ];
   }
 }
 
@@ -251,7 +255,7 @@ class RequestParams extends StatelessWidget {
       }
     });
 
-    return expansionTile("Request Params", content, initiallyExpanded: initiallyExpanded,
+    return expansionTile(AppLocalizations.of(context)!.requestParams, content, initiallyExpanded: initiallyExpanded,
         onExpansionChanged: (expanded) {
       //保存展开状态
       initiallyExpanded = expanded;
@@ -277,38 +281,39 @@ class General extends StatelessWidget {
     try {
       requestUrl = Uri.decodeFull(request.requestUrl);
     } catch (_) {}
+    var localizations = AppLocalizations.of(context)!;
     var content = [
       const SizedBox(height: 10),
-      RowWidget("Request URL", requestUrl),
+      RowWidget(localizations.requestUrl, requestUrl),
       const SizedBox(height: 15),
-      RowWidget("Request Method", request.method.name),
+      RowWidget(localizations.requestMethod, request.method.name),
       const SizedBox(height: 15),
-      RowWidget("Protocol", request.protocolVersion),
+      RowWidget(localizations.protocol, request.protocolVersion),
       const SizedBox(height: 15),
-      RowWidget("Status Code", response?.status.toString()),
+      RowWidget(localizations.statusCode, response?.status.toString()),
       const SizedBox(height: 15),
-      RowWidget("Remote Address",
+      RowWidget(localizations.remoteAddress,
           '${response?.remoteHost ?? ''}${response?.remotePort == null ? '' : ':${response?.remotePort}'}'),
       const SizedBox(height: 15),
-      RowWidget("Request Time", request.requestTime.formatMillisecond()),
+      RowWidget(localizations.requestTime, request.requestTime.formatMillisecond()),
       const SizedBox(height: 15),
-      RowWidget("Duration", response?.costTime()),
+      RowWidget(localizations.duration, response?.costTime()),
       const SizedBox(height: 15),
-      RowWidget("Request Content-Type", request.headers.contentType),
+      RowWidget(localizations.requestContentType, request.headers.contentType),
       const SizedBox(height: 15),
-      RowWidget("Response Content-Type", response?.headers.contentType),
+      RowWidget(localizations.responseContentType, response?.headers.contentType),
       const SizedBox(height: 15),
-      RowWidget("Request Package", getPackage(request.packageSize)),
+      RowWidget(localizations.requestPackage, getPackage(request.packageSize)),
       const SizedBox(height: 15),
-      RowWidget("Response Package", getPackage(response?.packageSize)),
+      RowWidget(localizations.responsePackage, getPackage(response?.packageSize)),
       const SizedBox(height: 15),
     ];
     if (request.processInfo != null) {
-      content.add(RowWidget("App", request.processInfo!.name));
+      content.add(RowWidget(localizations.app, request.processInfo!.name));
       content.add(const SizedBox(height: 15));
     }
 
-    return ListView(children: [expansionTile("General", content)]);
+    return ListView(children: [expansionTile(localizations.general, content)]);
   }
 }
 
@@ -324,10 +329,11 @@ class Cookies extends StatelessWidget {
     var requestCookie = request.get()?.cookies.expand((cookie) => _cookieWidget(cookie)!);
 
     var responseCookie = response.get()?.headers.getList("Set-Cookie")?.expand((e) => _cookieWidget(e)!);
+    var localizations = AppLocalizations.of(context)!;
     return ListView(children: [
-      requestCookie == null ? const SizedBox() : expansionTile("Request Cookies", requestCookie.toList()),
+      requestCookie == null ? const SizedBox() : expansionTile(localizations.requestCookies, requestCookie.toList()),
       const SizedBox(height: 15),
-      responseCookie == null ? const SizedBox() : expansionTile("Response Cookies", responseCookie.toList()),
+      responseCookie == null ? const SizedBox() : expansionTile(localizations.responseCookies, responseCookie.toList()),
     ]);
   }
 

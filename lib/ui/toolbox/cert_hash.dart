@@ -92,13 +92,13 @@ class _CertHashPageState extends State<CertHashPage> {
                 },
                 style: Buttons.buttonStyle,
                 icon: const Icon(Icons.folder_open),
-                label: Text("File")),
+                label: Text(localizations.selectFile)),
             const SizedBox(width: 15),
             ElevatedButton.icon(
                 onPressed: () => input.clear(),
                 style: Buttons.buttonStyle,
                 icon: const Icon(Icons.clear),
-                label: const Text("Clear")),
+                label: Text(localizations.clear)),
             const SizedBox(width: 15),
             FilledButton.icon(
                 onPressed: () {
@@ -107,7 +107,7 @@ class _CertHashPageState extends State<CertHashPage> {
                 },
                 style: Buttons.buttonStyle,
                 icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text("Run")),
+                label: Text(localizations.run)),
             const SizedBox(width: 15),
           ]),
           const SizedBox(width: 10),

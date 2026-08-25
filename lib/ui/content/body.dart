@@ -161,7 +161,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
           child: TabBar(
               labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               labelPadding: const EdgeInsets.only(left: 3, right: 5),
-              tabs: tabs.tabList(),
+              tabs: tabs.tabList(localizations),
               onTap: (index) {
                 tabIndex = index;
                 bodyKey.currentState?.changeState(widget.httpMessage, tabs.list[tabIndex]);
@@ -235,7 +235,8 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
   /// 标题
   Widget titleWidget({bool inNewWindow = false}) {
-    var type = widget.httpMessage is HttpRequest ? "Request" : "Response";
+    var isRequestMessage = widget.httpMessage is HttpRequest;
+    var typeTitle = '${isRequestMessage ? localizations.request : localizations.response} ${localizations.body}';
 
     bool isImage = widget.httpMessage?.contentType == ContentType.image;
     VisualDensity visualDensity = Platforms.isMobile() ? VisualDensity.compact : VisualDensity.standard;
@@ -335,7 +336,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('$type Body', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          Text(typeTitle, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
           const SizedBox(width: 8),
           searchBtn,
           const SizedBox(width: 4),
@@ -363,7 +364,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
     // Default (desktop + mobile without crypto): keep the previous full inline actions
     // (horizontal scroll when needed).
     final list = <Widget>[
-      Text('$type Body', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+      Text(typeTitle, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
       const SizedBox(width: 18),
       searchBtn,
       const SizedBox(width: 4),
@@ -658,12 +659,13 @@ class _BodyState extends State<_Body> {
                 ],
               )))
           .toList();
+      var localizations = AppLocalizations.of(context)!;
       return Column(
         children: [
-          const SelectionContainer.disabled(
+          SelectionContainer.disabled(
               child: Row(children: [
-            Expanded(child: Text("Data")),
-            SizedBox(width: 130, child: Text("Time")),
+            Expanded(child: Text(localizations.data)),
+            SizedBox(width: 130, child: Text(localizations.time)),
           ])),
           Divider(height: 5, thickness: 1, color: Colors.grey[300]),
           ...list ?? []
@@ -679,7 +681,7 @@ class _BodyState extends State<_Body> {
       return Center(child: Image.memory(Uint8List.fromList(message.body ?? []), fit: BoxFit.scaleDown));
     }
     if (type == ViewType.video) {
-      return const Center(child: Text("video not support preview"));
+      return Center(child: Text(AppLocalizations.of(context)!.videoNotSupportPreview));
     }
     if (type == ViewType.hex) {
       return HexViewer(data: Uint8List.fromList(message.body!), searchController: widget.searchController);
@@ -814,8 +816,8 @@ class Tabs {
     return tabs;
   }
 
-  List<Tab> tabList() {
-    return list.map((e) => Tab(text: e.title)).toList();
+  List<Tab> tabList(AppLocalizations localizations) {
+    return list.map((e) => Tab(text: e.localizedTitle(localizations))).toList();
   }
 }
 
@@ -836,6 +838,24 @@ enum ViewType {
   final String title;
 
   const ViewType(this.title);
+
+  ///本地化标签名，JSON/HTML/XML 等专有名词保持原文
+  String localizedTitle(AppLocalizations localizations) {
+    switch (this) {
+      case ViewType.text:
+        return localizations.viewTypeText;
+      case ViewType.formUrl:
+        return localizations.viewTypeUrlDecode;
+      case ViewType.image:
+        return localizations.viewTypeImage;
+      case ViewType.video:
+        return localizations.viewTypeVideo;
+      case ViewType.hex:
+        return localizations.viewTypeHex;
+      default:
+        return title;
+    }
+  }
 
   static ViewType? of(ContentType contentType) {
     for (var value in values) {

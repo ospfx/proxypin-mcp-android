@@ -213,7 +213,7 @@ class _DomainListState extends State<DomainList> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Container(width: 15),
-                  const Expanded(child: Text('Host')),
+                  Expanded(child: Text(localizations.host)),
                 ],
               ),
               const Divider(thickness: 0.5),

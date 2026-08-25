@@ -269,7 +269,7 @@ class _RewriteUpdateAddState extends State<RewriteUpdateEdit> {
                     : Text(i18n.noChangesDetected, style: TextStyle(color: Colors.red, fontSize: 14))),
                 Expanded(child: SizedBox()),
                 IconButton(
-                  tooltip: 'JSON Format',
+                  tooltip: i18n.jsonFormat,
                   icon: Icon(Icons.data_object,
                       size: 20, color: jsonFormatted ? Theme.of(context).colorScheme.primary : null),
                   onPressed: () {

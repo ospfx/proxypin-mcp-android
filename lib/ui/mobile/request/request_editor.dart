@@ -484,7 +484,7 @@ class _HttpState extends State<_HttpWidget> with SingleTickerProviderStateMixin,
 
     final paramsTab = _hasParamsTab
         ? KeyValWidget(
-            title: 'URL${localizations.param}',
+            title: 'URL ${localizations.param}',
             paramNotifier: widget.urlQueryNotifier,
             params: message is HttpRequest ? (message as HttpRequest).requestUri?.queryParametersAll : null,
             showTitle: false,
@@ -492,7 +492,7 @@ class _HttpState extends State<_HttpWidget> with SingleTickerProviderStateMixin,
         : null;
 
     final headersTab = KeyValWidget(
-      title: "Headers",
+      title: localizations.headers,
       params: message?.headers.getHeaders() ?? initHeader,
       key: headerKey,
       suggestions: HttpHeaders.commonHeaderKeys,
@@ -513,9 +513,9 @@ class _HttpState extends State<_HttpWidget> with SingleTickerProviderStateMixin,
             labelColor: theme.colorScheme.primary,
             indicatorSize: TabBarIndicatorSize.label,
             tabs: [
-              if (_hasParamsTab) Tab(text: 'Params', height: 36),
-              const Tab(text: 'Headers', height: 36),
-              const Tab(text: 'Body', height: 36),
+              if (_hasParamsTab) Tab(text: localizations.param, height: 36),
+              Tab(text: localizations.headers, height: 36),
+              Tab(text: localizations.body, height: 36),
             ],
           ),
           const SizedBox(height: 6),

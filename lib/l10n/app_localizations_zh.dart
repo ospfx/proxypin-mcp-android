@@ -655,7 +655,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trustCa => '信任证书';
 
   @override
-  String get profileDownload => 'Profile Download';
+  String get profileDownload => '已下载描述文件';
 
   @override
   String get exportCA => '导出根证书';
@@ -1151,9 +1151,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get remoteUrl => '远程URL';
 
   @override
-  String get view => '查看';
-
-  @override
   String get mcpServer => 'MCP 服务';
 
   @override
@@ -1231,6 +1228,8 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mcpInvalidPort => '无效的端口号';
+
+  @override
   String get preview => '预览';
 
   @override
@@ -1289,6 +1288,195 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get weakNetworkRules => 'URL 规则';
+
+  @override
+  String get general => '概要';
+
+  @override
+  String get path => '路径';
+
+  @override
+  String get requestUrl => '请求 URL';
+
+  @override
+  String get protocol => '协议';
+
+  @override
+  String get remoteAddress => '远程地址';
+
+  @override
+  String get requestTime => '请求时间';
+
+  @override
+  String get requestContentType => '请求内容类型';
+
+  @override
+  String get responseContentType => '响应内容类型';
+
+  @override
+  String get requestPackage => '请求大小';
+
+  @override
+  String get responsePackage => '响应大小';
+
+  @override
+  String get app => '应用';
+
+  @override
+  String get requestParams => '请求参数';
+
+  @override
+  String get requestCookies => '请求 Cookies';
+
+  @override
+  String get responseCookies => '响应 Cookies';
+
+  @override
+  String get headers => '头部';
+
+  @override
+  String get headerViewText => '头部视图: 文本';
+
+  @override
+  String get headerViewTable => '头部视图: 表格';
+
+  @override
+  String get body => '消息体';
+
+  @override
+  String get data => '数据';
+
+  @override
+  String get videoNotSupportPreview => '暂不支持视频预览';
+
+  @override
+  String get viewTypeText => '文本';
+
+  @override
+  String get viewTypeUrlDecode => 'URL 解码';
+
+  @override
+  String get viewTypeImage => '图片';
+
+  @override
+  String get viewTypeVideo => '视频';
+
+  @override
+  String get viewTypeHex => '十六进制';
+
+  @override
+  String get caseSensitive => '区分大小写';
+
+  @override
+  String get toggleReplace => '切换替换';
+
+  @override
+  String get previous => '上一个';
+
+  @override
+  String get next => '下一个';
+
+  @override
+  String get replaceAll => '全部替换';
+
+  @override
+  String get host => '主机';
+
+  @override
+  String get portLabel => '端口';
+
+  @override
+  String get run => '运行';
+
+  @override
+  String get result => '结果';
+
+  @override
+  String get readOnly => '只读';
+
+  @override
+  String get jsonFormat => 'JSON 格式化';
+
+  @override
+  String get regexpPattern => '正则表达式';
+
+  @override
+  String get regexpPatternHint => '输入正则表达式';
+
+  @override
+  String get regexpDigits => '数字';
+
+  @override
+  String get regexpLetters => '字母';
+
+  @override
+  String get regexpAlphanumeric => '字母数字';
+
+  @override
+  String get regexpEmail => '邮箱';
+
+  @override
+  String get regexpDate => '日期 (YYYY-MM-DD)';
+
+  @override
+  String get replaceTextLabel => '替换文本';
+
+  @override
+  String get replaceTextHint => '输入替换内容';
+
+  @override
+  String get invalidRegexp => '无效的正则表达式';
+
+  @override
+  String get aesMode => '模式';
+
+  @override
+  String get aesPadding => '填充';
+
+  @override
+  String get aesKeyLength => '密钥长度';
+
+  @override
+  String get urlEncodeDecode => 'URL 编码/解码';
+
+  @override
+  String get base64EncodeDecode => 'Base64 编码/解码';
+
+  @override
+  String get unicodeEncodeDecode => 'Unicode 编码/解码';
+
+  @override
+  String get md5Hash => 'MD5 哈希';
+
+  @override
+  String get aesEncryptDecrypt => 'AES 加密/解密';
+
+  @override
+  String get mcpServerForAi => '面向 AI 的 MCP 服务';
+
+  @override
+  String get jsonViewerTitle => 'JSON 查看器';
+
+  @override
+  String get xmlViewerTitle => 'XML 查看器';
+
+  @override
+  String get timestampHint => '时间戳';
+
+  @override
+  String get p12PasswordHint => '输入 p12 文件的密码';
+
+  @override
+  String get p12PasswordSetHint => '设置用于保护 p12 文件的密码';
+
+  @override
+  String get clearMessages => '清空消息';
+
+  @override
+  String get jumpToLatestMessages => '跳转到最新消息';
+
+  @override
+  String get cookies => 'Cookies';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -2281,7 +2469,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cipher => '密文';
 
   @override
-  String get view => '查看';
+  String get view => '檢視';
 
   @override
   String get appUpdateCheckVersion => '檢查更新';
@@ -2374,9 +2562,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get remoteUrl => '遠端URL';
 
   @override
-  String get view => '檢視';
-
-  @override
   String get mcpServer => 'MCP 服務';
 
   @override
@@ -2454,6 +2639,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get mcpInvalidPort => '無效的連接埠號';
+
+  @override
   String get preview => '預覽';
 
   @override
@@ -2512,4 +2699,193 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get weakNetworkRules => 'URL 規則';
+
+  @override
+  String get general => '概要';
+
+  @override
+  String get path => '路徑';
+
+  @override
+  String get requestUrl => '請求 URL';
+
+  @override
+  String get protocol => '協定';
+
+  @override
+  String get remoteAddress => '遠端位址';
+
+  @override
+  String get requestTime => '請求時間';
+
+  @override
+  String get requestContentType => '請求內容類型';
+
+  @override
+  String get responseContentType => '回應內容類型';
+
+  @override
+  String get requestPackage => '請求大小';
+
+  @override
+  String get responsePackage => '回應大小';
+
+  @override
+  String get app => '應用';
+
+  @override
+  String get requestParams => '請求參數';
+
+  @override
+  String get requestCookies => '請求 Cookies';
+
+  @override
+  String get responseCookies => '回應 Cookies';
+
+  @override
+  String get headers => '標頭';
+
+  @override
+  String get headerViewText => '標頭檢視: 文字';
+
+  @override
+  String get headerViewTable => '標頭檢視: 表格';
+
+  @override
+  String get body => '訊息內容';
+
+  @override
+  String get data => '資料';
+
+  @override
+  String get videoNotSupportPreview => '暫不支援影片預覽';
+
+  @override
+  String get viewTypeText => '文字';
+
+  @override
+  String get viewTypeUrlDecode => 'URL 解碼';
+
+  @override
+  String get viewTypeImage => '圖片';
+
+  @override
+  String get viewTypeVideo => '影片';
+
+  @override
+  String get viewTypeHex => '十六進位';
+
+  @override
+  String get caseSensitive => '區分大小寫';
+
+  @override
+  String get toggleReplace => '切換替換';
+
+  @override
+  String get previous => '上一個';
+
+  @override
+  String get next => '下一個';
+
+  @override
+  String get replaceAll => '全部替換';
+
+  @override
+  String get host => '主機';
+
+  @override
+  String get portLabel => '連接埠';
+
+  @override
+  String get run => '執行';
+
+  @override
+  String get result => '結果';
+
+  @override
+  String get readOnly => '唯讀';
+
+  @override
+  String get jsonFormat => 'JSON 格式化';
+
+  @override
+  String get regexpPattern => '正規表達式';
+
+  @override
+  String get regexpPatternHint => '輸入正規表達式';
+
+  @override
+  String get regexpDigits => '數字';
+
+  @override
+  String get regexpLetters => '字母';
+
+  @override
+  String get regexpAlphanumeric => '字母數字';
+
+  @override
+  String get regexpEmail => '電子郵件';
+
+  @override
+  String get regexpDate => '日期 (YYYY-MM-DD)';
+
+  @override
+  String get replaceTextLabel => '替換文字';
+
+  @override
+  String get replaceTextHint => '輸入替換內容';
+
+  @override
+  String get invalidRegexp => '無效的正規表達式';
+
+  @override
+  String get aesMode => '模式';
+
+  @override
+  String get aesPadding => '填充';
+
+  @override
+  String get aesKeyLength => '金鑰長度';
+
+  @override
+  String get urlEncodeDecode => 'URL 編碼/解碼';
+
+  @override
+  String get base64EncodeDecode => 'Base64 編碼/解碼';
+
+  @override
+  String get unicodeEncodeDecode => 'Unicode 編碼/解碼';
+
+  @override
+  String get md5Hash => 'MD5 雜湊';
+
+  @override
+  String get aesEncryptDecrypt => 'AES 加密/解密';
+
+  @override
+  String get mcpServerForAi => '面向 AI 的 MCP 服務';
+
+  @override
+  String get jsonViewerTitle => 'JSON 檢視器';
+
+  @override
+  String get xmlViewerTitle => 'XML 檢視器';
+
+  @override
+  String get timestampHint => '時間戳';
+
+  @override
+  String get p12PasswordHint => '輸入 p12 檔案的密碼';
+
+  @override
+  String get p12PasswordSetHint => '設定用於保護 p12 檔案的密碼';
+
+  @override
+  String get clearMessages => '清空訊息';
+
+  @override
+  String get jumpToLatestMessages => '跳至最新訊息';
+
+  @override
+  String get cookies => 'Cookies';
 }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import 'package:flutter/material.dart';
+import 'package:proxypin/l10n/app_localizations.dart';
 import 'package:proxypin/ui/component/search_condition.dart';
 
 import '../../component/model/search_model.dart';
@@ -81,7 +82,7 @@ class MobileSearchState extends State<MobileSearch> {
                 prefixIcon: InkWell(
                     onTap: showSearch,
                     child: Icon(Icons.search, color: _searched ? Colors.green : Theme.of(context).colorScheme.primary)),
-                hintText: 'Search')));
+                hintText: AppLocalizations.of(context)!.search)));
   }
 
   void showSearch() {

@@ -169,7 +169,7 @@ class _TimestampPageState extends State<TimestampPage> {
         controller: timestamp,
         onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
         decoration: decoration(context,
-            hintText: 'timestamp',
+            hintText: localizations.timestampHint,
             suffixIcon: IconButton(icon: Icon(Icons.clear, size: 20), onPressed: () => timestamp.clear())));
   }
 

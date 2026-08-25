@@ -88,11 +88,11 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                       initialValue: externalProxy.host,
                       validator: (val) => val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
                       onChanged: (val) => externalProxy.host = val,
-                      decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 8),
-                        hintText: 'Host',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        hintText: localizations.host,
+                        hintStyle: const TextStyle(color: Colors.grey),
+                        border: const OutlineInputBorder(),
                       ),
                     )),
                     const SizedBox(child: Text(' : ', style: TextStyle(fontSize: 22))),
@@ -107,11 +107,11 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                           ],
                           onChanged: (val) => externalProxy.port = int.parse(val),
                           validator: (val) => val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
-                          decoration: const InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8),
-                            hintText: 'Port',
-                            hintStyle: TextStyle(color: Colors.grey),
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            hintText: localizations.portLabel,
+                            hintStyle: const TextStyle(color: Colors.grey),
+                            border: const OutlineInputBorder(),
                           ),
                         ))
                   ])),

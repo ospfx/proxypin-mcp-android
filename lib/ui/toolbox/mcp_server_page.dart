@@ -333,7 +333,7 @@ class _McpServerPageState extends State<McpServerPage> {
                     child: IconButton(
                       icon: const Icon(Icons.copy, size: 16),
                       onPressed: () => _copyToClipboard(configJson),
-                      tooltip: 'Copy',
+                      tooltip: AppLocalizations.of(context)!.copy,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                     ),
@@ -372,7 +372,7 @@ class _McpServerPageState extends State<McpServerPage> {
         IconButton(
           icon: const Icon(Icons.copy, size: 14),
           onPressed: () => _copyToClipboard(value),
-          tooltip: 'Copy',
+          tooltip: AppLocalizations.of(context)!.copy,
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
         ),

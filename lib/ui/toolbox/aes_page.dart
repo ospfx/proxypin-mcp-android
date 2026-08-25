@@ -84,7 +84,7 @@ class _AesWidgetState extends State<AesPage> {
             SizedBox(
                 width: 120,
                 child: Row(children: [
-                  Text("Mode"),
+                  Text(localizations.aesMode),
                   const SizedBox(width: 15),
                   DropdownButton<String>(
                     value: selectedMode,
@@ -101,7 +101,7 @@ class _AesWidgetState extends State<AesPage> {
             SizedBox(
                 width: 196,
                 child: Row(children: [
-                  Text("Padding"),
+                  Text(localizations.aesPadding),
                   const SizedBox(width: 15),
                   DropdownButton<String>(
                     value: selectedPadding,
@@ -118,7 +118,7 @@ class _AesWidgetState extends State<AesPage> {
             SizedBox(
                 width: 190,
                 child: Row(children: [
-                  Text("Key Length"),
+                  Text(localizations.aesKeyLength),
                   const SizedBox(width: 15),
                   DropdownButton<int>(
                     value: selectedKeyLength,

@@ -1164,9 +1164,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get remoteUrl => 'Remote URL';
 
   @override
-  String get view => 'View';
-
-  @override
   String get mcpServer => 'MCP Server';
 
   @override
@@ -1244,6 +1241,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mcpInvalidPort => 'Invalid port number';
+
+  @override
   String get preview => 'Preview';
 
   @override
@@ -1302,4 +1301,193 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weakNetworkRules => 'URL Rules';
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get path => 'Path';
+
+  @override
+  String get requestUrl => 'Request URL';
+
+  @override
+  String get protocol => 'Protocol';
+
+  @override
+  String get remoteAddress => 'Remote Address';
+
+  @override
+  String get requestTime => 'Request Time';
+
+  @override
+  String get requestContentType => 'Request Content-Type';
+
+  @override
+  String get responseContentType => 'Response Content-Type';
+
+  @override
+  String get requestPackage => 'Request Size';
+
+  @override
+  String get responsePackage => 'Response Size';
+
+  @override
+  String get app => 'App';
+
+  @override
+  String get requestParams => 'Request Params';
+
+  @override
+  String get requestCookies => 'Request Cookies';
+
+  @override
+  String get responseCookies => 'Response Cookies';
+
+  @override
+  String get headers => 'Headers';
+
+  @override
+  String get headerViewText => 'Headers: Text';
+
+  @override
+  String get headerViewTable => 'Headers: Table';
+
+  @override
+  String get body => 'Body';
+
+  @override
+  String get data => 'Data';
+
+  @override
+  String get videoNotSupportPreview => 'Video preview is not supported';
+
+  @override
+  String get viewTypeText => 'Text';
+
+  @override
+  String get viewTypeUrlDecode => 'URL Decode';
+
+  @override
+  String get viewTypeImage => 'Image';
+
+  @override
+  String get viewTypeVideo => 'Video';
+
+  @override
+  String get viewTypeHex => 'Hex';
+
+  @override
+  String get caseSensitive => 'Case Sensitive';
+
+  @override
+  String get toggleReplace => 'Toggle Replace';
+
+  @override
+  String get previous => 'Previous';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get replaceAll => 'Replace All';
+
+  @override
+  String get host => 'Host';
+
+  @override
+  String get portLabel => 'Port';
+
+  @override
+  String get run => 'Run';
+
+  @override
+  String get result => 'Result';
+
+  @override
+  String get readOnly => 'Read-only';
+
+  @override
+  String get jsonFormat => 'JSON Format';
+
+  @override
+  String get regexpPattern => 'Pattern';
+
+  @override
+  String get regexpPatternHint => 'Enter a regular expression';
+
+  @override
+  String get regexpDigits => 'Digits';
+
+  @override
+  String get regexpLetters => 'Letters';
+
+  @override
+  String get regexpAlphanumeric => 'Alphanumeric';
+
+  @override
+  String get regexpEmail => 'Email';
+
+  @override
+  String get regexpDate => 'Date (YYYY-MM-DD)';
+
+  @override
+  String get replaceTextLabel => 'Replace Text';
+
+  @override
+  String get replaceTextHint => 'Enter replacement text';
+
+  @override
+  String get invalidRegexp => 'Invalid regular expression';
+
+  @override
+  String get aesMode => 'Mode';
+
+  @override
+  String get aesPadding => 'Padding';
+
+  @override
+  String get aesKeyLength => 'Key Length';
+
+  @override
+  String get urlEncodeDecode => 'URL Encode/Decode';
+
+  @override
+  String get base64EncodeDecode => 'Base64 Encode/Decode';
+
+  @override
+  String get unicodeEncodeDecode => 'Unicode Encode/Decode';
+
+  @override
+  String get md5Hash => 'MD5 Hash';
+
+  @override
+  String get aesEncryptDecrypt => 'AES Encrypt/Decrypt';
+
+  @override
+  String get mcpServerForAi => 'MCP Server for AI';
+
+  @override
+  String get jsonViewerTitle => 'JSON Viewer';
+
+  @override
+  String get xmlViewerTitle => 'XML Viewer';
+
+  @override
+  String get timestampHint => 'timestamp';
+
+  @override
+  String get p12PasswordHint => 'Enter the password of the p12 file';
+
+  @override
+  String get p12PasswordSetHint => 'Enter a password to protect p12 file';
+
+  @override
+  String get clearMessages => 'Clear messages';
+
+  @override
+  String get jumpToLatestMessages => 'Jump to latest messages';
+
+  @override
+  String get cookies => 'Cookies';
 }

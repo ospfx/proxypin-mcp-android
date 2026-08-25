@@ -94,8 +94,8 @@ class _RegExpPageState extends State<RegExpPage> {
             maxLines: 3,
             onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
             decoration: decoration(context,
-                label: 'Pattern',
-                hintText: 'Enter a regular expression',
+                label: localizations.regexpPattern,
+                hintText: localizations.regexpPatternHint,
                 suffixIcon: IconButton(icon: Icon(Icons.clear), onPressed: () => pattern.clear())),
           ),
           const SizedBox(height: 5),
@@ -104,19 +104,19 @@ class _RegExpPageState extends State<RegExpPage> {
             children: [
               TextButton(
                 onPressed: () => pattern.text += r'\d+', // Only digits
-                child: const Text('Digits'),
+                child: Text(localizations.regexpDigits),
               ),
               TextButton(
                 onPressed: () => pattern.text += r'[a-zA-Z]+', // Only letters
-                child: const Text('Letters'),
+                child: Text(localizations.regexpLetters),
               ),
               TextButton(
                 onPressed: () => pattern.text += r'[a-zA-Z0-9]+', // Alphanumeric
-                child: const Text('Alphanumeric'),
+                child: Text(localizations.regexpAlphanumeric),
               ),
               TextButton(
                 onPressed: () => pattern.text += r'\w+@\w+\.\w+', // Email
-                child: const Text('Email'),
+                child: Text(localizations.regexpEmail),
               ),
               TextButton(
                 onPressed: () => pattern.text += r'(https?|ftp)://[^\s/$.?#].[^\s]*', // URL
@@ -124,7 +124,7 @@ class _RegExpPageState extends State<RegExpPage> {
               ),
               TextButton(
                 onPressed: () => pattern.text += r'\d{4}-\d{2}-\d{2}', // Date (YYYY-MM-DD)
-                child: const Text('Date (YYYY-MM-DD)'),
+                child: Text(localizations.regexpDate),
               ),
             ],
           ),
@@ -150,7 +150,7 @@ class _RegExpPageState extends State<RegExpPage> {
                 child: TextField(
                   controller: replaceText,
                   onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
-                  decoration: decoration(context, label: 'Replace Text', hintText: 'Enter replacement text'),
+                  decoration: decoration(context, label: localizations.replaceTextLabel, hintText: localizations.replaceTextHint),
                 )),
             FilledButton.icon(
                 onPressed: () {
@@ -168,19 +168,19 @@ class _RegExpPageState extends State<RegExpPage> {
                       });
                     });
                   } catch (e) {
-                    FlutterToastr.show('Invalid regular expression: $e', context, duration: 3);
+                    FlutterToastr.show('${localizations.invalidRegexp}: $e', context, duration: 3);
                   }
                 },
                 style: Buttons.buttonStyle,
                 icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text('Run')),
+                label: Text(localizations.run)),
             const SizedBox(width: 20),
           ]),
           SizedBox(height: 10),
 
           if (resultInput != null)
             Row(children: [
-              Text("Result", style: TextStyle(fontSize: 16, color: primaryColor, fontWeight: FontWeight.w500)),
+              Text(localizations.result, style: TextStyle(fontSize: 16, color: primaryColor, fontWeight: FontWeight.w500)),
               const SizedBox(width: 15),
               //copy
               IconButton(

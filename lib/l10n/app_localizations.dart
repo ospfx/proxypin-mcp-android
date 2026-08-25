@@ -2350,12 +2350,6 @@ abstract class AppLocalizations {
   /// **'Remote URL'**
   String get remoteUrl;
 
-  /// No description provided for @preview.
-  ///
-  /// In en, this message translates to:
-  /// **'View'**
-  String get view;
-
   /// No description provided for @mcpServer.
   ///
   /// In en, this message translates to:
@@ -2505,6 +2499,10 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid port number'**
   String get mcpInvalidPort;
+
+  /// No description provided for @preview.
+  ///
+  /// In en, this message translates to:
   /// **'Preview'**
   String get preview;
 
@@ -2621,6 +2619,384 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'URL Rules'**
   String get weakNetworkRules;
+
+  /// No description provided for @general.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get general;
+
+  /// No description provided for @path.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get path;
+
+  /// No description provided for @requestUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Request URL'**
+  String get requestUrl;
+
+  /// No description provided for @protocol.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol'**
+  String get protocol;
+
+  /// No description provided for @remoteAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote Address'**
+  String get remoteAddress;
+
+  /// No description provided for @requestTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Time'**
+  String get requestTime;
+
+  /// No description provided for @requestContentType.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Content-Type'**
+  String get requestContentType;
+
+  /// No description provided for @responseContentType.
+  ///
+  /// In en, this message translates to:
+  /// **'Response Content-Type'**
+  String get responseContentType;
+
+  /// No description provided for @requestPackage.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Size'**
+  String get requestPackage;
+
+  /// No description provided for @responsePackage.
+  ///
+  /// In en, this message translates to:
+  /// **'Response Size'**
+  String get responsePackage;
+
+  /// No description provided for @app.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get app;
+
+  /// No description provided for @requestParams.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Params'**
+  String get requestParams;
+
+  /// No description provided for @requestCookies.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Cookies'**
+  String get requestCookies;
+
+  /// No description provided for @responseCookies.
+  ///
+  /// In en, this message translates to:
+  /// **'Response Cookies'**
+  String get responseCookies;
+
+  /// No description provided for @headers.
+  ///
+  /// In en, this message translates to:
+  /// **'Headers'**
+  String get headers;
+
+  /// No description provided for @headerViewText.
+  ///
+  /// In en, this message translates to:
+  /// **'Headers: Text'**
+  String get headerViewText;
+
+  /// No description provided for @headerViewTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Headers: Table'**
+  String get headerViewTable;
+
+  /// No description provided for @body.
+  ///
+  /// In en, this message translates to:
+  /// **'Body'**
+  String get body;
+
+  /// No description provided for @data.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get data;
+
+  /// No description provided for @videoNotSupportPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Video preview is not supported'**
+  String get videoNotSupportPreview;
+
+  /// No description provided for @viewTypeText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get viewTypeText;
+
+  /// No description provided for @viewTypeUrlDecode.
+  ///
+  /// In en, this message translates to:
+  /// **'URL Decode'**
+  String get viewTypeUrlDecode;
+
+  /// No description provided for @viewTypeImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get viewTypeImage;
+
+  /// No description provided for @viewTypeVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get viewTypeVideo;
+
+  /// No description provided for @viewTypeHex.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex'**
+  String get viewTypeHex;
+
+  /// No description provided for @caseSensitive.
+  ///
+  /// In en, this message translates to:
+  /// **'Case Sensitive'**
+  String get caseSensitive;
+
+  /// No description provided for @toggleReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle Replace'**
+  String get toggleReplace;
+
+  /// No description provided for @previous.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get previous;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @replaceAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace All'**
+  String get replaceAll;
+
+  /// No description provided for @host.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get host;
+
+  /// No description provided for @portLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get portLabel;
+
+  /// No description provided for @run.
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get run;
+
+  /// No description provided for @result.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get result;
+
+  /// No description provided for @readOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only'**
+  String get readOnly;
+
+  /// No description provided for @jsonFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'JSON Format'**
+  String get jsonFormat;
+
+  /// No description provided for @regexpPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern'**
+  String get regexpPattern;
+
+  /// No description provided for @regexpPatternHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a regular expression'**
+  String get regexpPatternHint;
+
+  /// No description provided for @regexpDigits.
+  ///
+  /// In en, this message translates to:
+  /// **'Digits'**
+  String get regexpDigits;
+
+  /// No description provided for @regexpLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'Letters'**
+  String get regexpLetters;
+
+  /// No description provided for @regexpAlphanumeric.
+  ///
+  /// In en, this message translates to:
+  /// **'Alphanumeric'**
+  String get regexpAlphanumeric;
+
+  /// No description provided for @regexpEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get regexpEmail;
+
+  /// No description provided for @regexpDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date (YYYY-MM-DD)'**
+  String get regexpDate;
+
+  /// No description provided for @replaceTextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace Text'**
+  String get replaceTextLabel;
+
+  /// No description provided for @replaceTextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter replacement text'**
+  String get replaceTextHint;
+
+  /// No description provided for @invalidRegexp.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid regular expression'**
+  String get invalidRegexp;
+
+  /// No description provided for @aesMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Mode'**
+  String get aesMode;
+
+  /// No description provided for @aesPadding.
+  ///
+  /// In en, this message translates to:
+  /// **'Padding'**
+  String get aesPadding;
+
+  /// No description provided for @aesKeyLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Key Length'**
+  String get aesKeyLength;
+
+  /// No description provided for @urlEncodeDecode.
+  ///
+  /// In en, this message translates to:
+  /// **'URL Encode/Decode'**
+  String get urlEncodeDecode;
+
+  /// No description provided for @base64EncodeDecode.
+  ///
+  /// In en, this message translates to:
+  /// **'Base64 Encode/Decode'**
+  String get base64EncodeDecode;
+
+  /// No description provided for @unicodeEncodeDecode.
+  ///
+  /// In en, this message translates to:
+  /// **'Unicode Encode/Decode'**
+  String get unicodeEncodeDecode;
+
+  /// No description provided for @md5Hash.
+  ///
+  /// In en, this message translates to:
+  /// **'MD5 Hash'**
+  String get md5Hash;
+
+  /// No description provided for @aesEncryptDecrypt.
+  ///
+  /// In en, this message translates to:
+  /// **'AES Encrypt/Decrypt'**
+  String get aesEncryptDecrypt;
+
+  /// No description provided for @mcpServerForAi.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP Server for AI'**
+  String get mcpServerForAi;
+
+  /// No description provided for @jsonViewerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'JSON Viewer'**
+  String get jsonViewerTitle;
+
+  /// No description provided for @xmlViewerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'XML Viewer'**
+  String get xmlViewerTitle;
+
+  /// No description provided for @timestampHint.
+  ///
+  /// In en, this message translates to:
+  /// **'timestamp'**
+  String get timestampHint;
+
+  /// No description provided for @p12PasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the password of the p12 file'**
+  String get p12PasswordHint;
+
+  /// No description provided for @p12PasswordSetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a password to protect p12 file'**
+  String get p12PasswordSetHint;
+
+  /// No description provided for @clearMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear messages'**
+  String get clearMessages;
+
+  /// No description provided for @jumpToLatestMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to latest messages'**
+  String get jumpToLatestMessages;
+
+  /// No description provided for @cookies.
+  ///
+  /// In en, this message translates to:
+  /// **'Cookies'**
+  String get cookies;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

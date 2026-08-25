@@ -168,7 +168,7 @@ class _XmlViewerPageState extends State<XmlViewerPage> {
           : PreferredSize(
               preferredSize: Platforms.isDesktop() ? const Size.fromHeight(23) : const Size.fromHeight(36),
               child: AppBar(
-                title: Text("XML Viewer", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w300)),
+                title: Text(localizations.xmlViewerTitle, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w300)),
                 centerTitle: true,
               ),
             ),

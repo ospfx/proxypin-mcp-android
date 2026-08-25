@@ -326,13 +326,13 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
               children: [
                 TextFormField(
                   initialValue: host,
-                  decoration: const InputDecoration(hintText: 'Host'),
+                  decoration: InputDecoration(hintText: localizations.host),
                   keyboardType: TextInputType.url,
                   onChanged: (value) => host = value,
                 ),
                 TextFormField(
                     initialValue: port.toString(),
-                    decoration: const InputDecoration(hintText: 'Port'),
+                    decoration: InputDecoration(hintText: localizations.portLabel),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       port = value.isEmpty ? null : int.tryParse(value);
