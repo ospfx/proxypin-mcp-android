@@ -37,6 +37,7 @@ The MCP Server listens on port **9010** by default and speaks two transports:
 
 The server **starts automatically** when the app launches (default on; toggle in Toolbox → MCP Server).
 The port is configurable there as well and is persisted across restarts.
+`Allow LAN Access` is **off by default**: MCP binds to `127.0.0.1` only. Turn it on to bind `0.0.0.0` for same-LAN access.
 
 Configure in Claude Desktop / Cursor / Windsurf:
 
@@ -50,7 +51,7 @@ Configure in Claude Desktop / Cursor / Windsurf:
 }
 ```
 
-> Running on a phone? Use the device IP (e.g. `http://192.168.1.5:9010/mcp`) or `adb forward tcp:9010 tcp:9010`.
+> For LAN usage, first enable `Allow LAN Access`, then use the device IP (e.g. `http://192.168.1.5:9010/mcp`) or `adb forward tcp:9010 tcp:9010`.
 
 ---
 
@@ -129,18 +130,18 @@ AI → release_intercept requestId=xxx body='{"user":"admin","pass":"test"}'
 ### Download
 
 Get the latest APK from [GitHub Releases](https://github.com/Mohen0/proxypin-mcp-android/releases)
-(`proxypin-mcp-android-{ver}.apk`, universal: arm64-v8a / armeabi-v7a / x86_64).
+(`proxypin-mcp-android-{ver}-arm64-v8a.apk`).
 
 Repo: [Mohen0/proxypin-mcp-android](https://github.com/Mohen0/proxypin-mcp-android)
 
 ### GitHub Actions (recommended)
 
-Push a `v*` tag and the CI builds a universal release APK and attaches it to a GitHub Release:
+Push a `v*` tag and the CI builds an `arm64-v8a` release APK and attaches it to a GitHub Release:
 
 ```bash
 git tag v1.3.0-mcp
 git push origin v1.3.0-mcp
-# GitHub Actions builds proxypin-mcp-android-{ver}.apk automatically
+# GitHub Actions builds proxypin-mcp-android-{ver}-arm64-v8a.apk automatically
 ```
 
 Workflow: `.github/workflows/release.yml` (Android only).
@@ -165,7 +166,7 @@ Requirements: Flutter **3.44.8+** (Dart ≥ 3.12.2), Android SDK, Java 17.
 ```bash
 flutter pub get
 flutter gen-l10n
-flutter build apk --release        # universal APK
+flutter build apk --release --target-platform android-arm64  # arm64-v8a APK
 # output: build/app/outputs/flutter-apk/app-release.apk
 ```
 

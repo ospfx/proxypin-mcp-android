@@ -1180,6 +1180,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get mcpAutoStartDesc => 'Automatically start MCP Server when the app launches';
 
   @override
+  String get mcpAllowLanAccess => 'Allow LAN Access';
+
+  @override
+  String get mcpAllowLanAccessDesc => 'When enabled, devices on the same LAN can access this MCP Server';
+
+  @override
+  String get mcpStopToChangeLanAccess => 'Stop server to change LAN access mode';
+
+  @override
   String get mcpStopToChange => 'Stop server to change port';
 
   @override

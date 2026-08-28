@@ -36,6 +36,7 @@ class McpServer {
   io.HttpServer? _server;
   int _port;
   bool _running = false;
+  bool _allowLanAccess = false;
 
   /// 默认端口
   static const int defaultPort = 9010;
@@ -59,6 +60,7 @@ class McpServer {
 
   static const String _prefsKey = 'proxyPinMcp_port';
   static const String _autoStartKey = 'proxyPinMcp_autoStart';
+  static const String _allowLanAccessKey = 'proxyPinMcp_allowLanAccess';
 
   /// 从本地读取已保存的端口
   static Future<int?> loadPort() async {
@@ -94,12 +96,30 @@ class McpServer {
     } catch (_) {}
   }
 
+  /// 读取局域网访问开关（默认关闭，仅本机访问）
+  static Future<bool> loadAllowLanAccess() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_allowLanAccessKey) ?? false;
+    } catch (_) {}
+    return false;
+  }
+
+  /// 保存局域网访问开关
+  static Future<void> saveAllowLanAccess(bool enabled) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_allowLanAccessKey, enabled);
+    } catch (_) {}
+  }
+
   /// App 启动时调用：恢复已保存端口，并按配置自动启动服务
   Future<void> autoStartIfEnabled() async {
     final savedPort = await loadPort();
     if (savedPort != null && savedPort > 0 && savedPort < 65536 && savedPort != _port) {
       _port = savedPort; // 直接赋值，不重复写回本地
     }
+    _allowLanAccess = await loadAllowLanAccess();
 
     final enabled = await loadAutoStart();
     if (!enabled || _running) return;
@@ -119,10 +139,16 @@ class McpServer {
 
   bool get isRunning => _running;
   int get port => _port;
+  bool get allowLanAccess => _allowLanAccess;
 
   set port(int value) {
     _port = value;
     savePort(value);
+  }
+
+  set allowLanAccess(bool value) {
+    _allowLanAccess = value;
+    saveAllowLanAccess(value);
   }
 
   /// 绑定抓包数据容器
@@ -149,12 +175,12 @@ class McpServer {
 
     while (attempts < maxAttempts) {
       try {
-        // Android 上 anyIPv4 会被拒绝，必须用 loopback（仅本机访问）
-        final bindAddr = io.Platform.isAndroid ? io.InternetAddress.loopbackIPv4 : io.InternetAddress.anyIPv4;
+        final bindAddr = _allowLanAccess ? io.InternetAddress.anyIPv4 : io.InternetAddress.loopbackIPv4;
         _server = await io.HttpServer.bind(bindAddr, tryPort);
         _port = tryPort;
         _running = true;
-        logger.i('MCP Server started on port $_port (streamable-http: /mcp, legacy-sse: /sse)');
+        logger.i(
+            'MCP Server started on ${bindAddr.address}:$_port (streamable-http: /mcp, legacy-sse: /sse)');
 
         _server!.listen((io.HttpRequest httpRequest) {
           _handleRequest(httpRequest);

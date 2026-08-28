@@ -2386,6 +2386,24 @@ abstract class AppLocalizations {
   /// **'Automatically start MCP Server when the app launches'**
   String get mcpAutoStartDesc;
 
+  /// No description provided for @mcpAllowLanAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow LAN Access'**
+  String get mcpAllowLanAccess;
+
+  /// No description provided for @mcpAllowLanAccessDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'When enabled, devices on the same LAN can access this MCP Server'**
+  String get mcpAllowLanAccessDesc;
+
+  /// No description provided for @mcpStopToChangeLanAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop server to change LAN access mode'**
+  String get mcpStopToChangeLanAccess;
+
   /// No description provided for @mcpStopToChange.
   ///
   /// In en, this message translates to:
