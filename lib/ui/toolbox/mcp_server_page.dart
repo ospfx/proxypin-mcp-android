@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
-import 'package:proxypin/network/mcp/mcp_server.dart';
 import 'package:proxypin/l10n/app_localizations.dart';
+import 'package:proxypin/network/mcp/mcp_server.dart';
+import 'package:proxypin/utils/ip.dart';
 
 /// MCP Server 管理页面
 /// 允许用户启动/停止 MCP Server，查看连接配置信息
@@ -36,6 +35,8 @@ class _McpServerPageState extends State<McpServerPage> {
   final TextEditingController _portController = TextEditingController();
   bool _isLoading = false;
   bool _autoStart = true;
+  bool _allowLanAccess = false;
+  String _lanIp = '127.0.0.1';
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
@@ -63,6 +64,21 @@ class _McpServerPageState extends State<McpServerPage> {
         });
       } else {
         _autoStart = enabled;
+      }
+    });
+    // 读取局域网访问开关
+    McpServer.loadAllowLanAccess().then((enabled) async {
+      if (enabled) {
+        await _loadLanIp();
+      }
+      if (mounted) {
+        setState(() {
+          _allowLanAccess = enabled;
+          _mcpServer.allowLanAccess = enabled;
+        });
+      } else {
+        _allowLanAccess = enabled;
+        _mcpServer.allowLanAccess = enabled;
       }
     });
   }
@@ -255,6 +271,41 @@ class _McpServerPageState extends State<McpServerPage> {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            // 局域网访问开关
+            Row(
+              children: [
+                Icon(Icons.wifi, size: 18, color: theme.iconTheme.color?.withValues(alpha: 0.5)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(localizations.mcpAllowLanAccess, style: theme.textTheme.bodyMedium),
+                      Text(localizations.mcpAllowLanAccessDesc,
+                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 11, color: theme.hintColor)),
+                      if (isRunning)
+                        Text(localizations.mcpStopToChangeLanAccess,
+                            style: theme.textTheme.bodySmall?.copyWith(color: Colors.orange.shade400, fontSize: 11)),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _allowLanAccess,
+                  onChanged: isRunning
+                      ? null
+                      : (value) async {
+                          if (value) {
+                            await _loadLanIp();
+                          }
+                          setState(() {
+                            _allowLanAccess = value;
+                            _mcpServer.allowLanAccess = value;
+                          });
+                        },
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -263,7 +314,7 @@ class _McpServerPageState extends State<McpServerPage> {
 
   /// 连接信息
   Widget _buildConnectionInfo(ThemeData theme, bool isDark) {
-    final localIp = _getLocalIp();
+    final localIp = _allowLanAccess ? _lanIp : '127.0.0.1';
     final mcpUrl = 'http://$localIp:${_mcpServer.port}/mcp';
     final sseUrl = 'http://$localIp:${_mcpServer.port}/sse';
 
@@ -506,13 +557,18 @@ class _McpServerPageState extends State<McpServerPage> {
     if (mounted) FlutterToastr.show(localizations.copied, context);
   }
 
-  String _getLocalIp() {
+  Future<void> _loadLanIp() async {
     try {
-      final interfaces = NetworkInterface.list(type: InternetAddressType.IPv4);
-      // 简单返回 127.0.0.1
-      return '127.0.0.1';
+      final ip = await localIp();
+      if (mounted) {
+        setState(() {
+          _lanIp = ip;
+        });
+      } else {
+        _lanIp = ip;
+      }
     } catch (e) {
-      return '127.0.0.1';
+      _lanIp = '127.0.0.1';
     }
   }
 }

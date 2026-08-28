@@ -1171,6 +1171,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mcpAutoStartDesc => 'App 启动时自动开启 MCP 服务';
 
   @override
+  String get mcpAllowLanAccess => '开放到局域网';
+
+  @override
+  String get mcpAllowLanAccessDesc => '开启后允许同局域网设备访问该 MCP 服务';
+
+  @override
+  String get mcpStopToChangeLanAccess => '停止服务后可修改局域网访问模式';
+
+  @override
   String get mcpStopToChange => '停止服务后可修改端口';
 
   @override
@@ -2580,6 +2589,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get mcpAutoStartDesc => 'App 啟動時自動開啟 MCP 服務';
+
+  @override
+  String get mcpAllowLanAccess => '開放到區域網路';
+
+  @override
+  String get mcpAllowLanAccessDesc => '啟用後允許同一區域網路的裝置存取此 MCP 服務';
+
+  @override
+  String get mcpStopToChangeLanAccess => '停止服務後可修改區域網路存取模式';
 
   @override
   String get mcpStopToChange => '停止服務後可修改連接埠';

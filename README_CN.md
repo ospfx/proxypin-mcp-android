@@ -37,6 +37,7 @@ MCP Server 默认监听 **9010** 端口，同时提供两种传输方式：
 
 MCP Server 会在 App 启动时**自动开启**（默认开，可在 工具箱 → MCP Server 关闭）。
 端口也可在此处修改，修改后会自动保存，重启不丢失。
+`开放到局域网` 开关默认关闭：MCP 仅绑定 `127.0.0.1`。开启后绑定 `0.0.0.0`，同局域网设备可访问。
 
 在 Claude Desktop / Cursor / Windsurf 中配置：
 
@@ -50,7 +51,7 @@ MCP Server 会在 App 启动时**自动开启**（默认开，可在 工具箱 �
 }
 ```
 
-> 在手机上运行？使用设备 IP（如 `http://192.168.1.5:9010/mcp`），或通过 `adb forward tcp:9010 tcp:9010` 转发到电脑。
+> 需要局域网访问时，先开启 `开放到局域网`，再使用设备 IP（如 `http://192.168.1.5:9010/mcp`），或通过 `adb forward tcp:9010 tcp:9010` 转发到电脑。
 
 ---
 
@@ -129,18 +130,18 @@ AI → release_intercept requestId=xxx body='{"user":"admin","pass":"test"}'
 ### 下载
 
 从 [GitHub Releases](https://github.com/Mohen0/proxypin-mcp-android/releases) 获取最新 APK
-（`proxypin-mcp-android-{ver}.apk`，通用包：arm64-v8a / armeabi-v7a / x86_64）。
+（`proxypin-mcp-android-{ver}-arm64-v8a.apk`）。
 
 仓库地址：[Mohen0/proxypin-mcp-android](https://github.com/Mohen0/proxypin-mcp-android)
 
 ### GitHub Actions 构建（推荐）
 
-推送 `v*` 标签，CI 自动构建通用 release APK 并附加到 GitHub Release：
+推送 `v*` 标签，CI 自动构建 `arm64-v8a` release APK 并附加到 GitHub Release：
 
 ```bash
 git tag v1.3.0-mcp
 git push origin v1.3.0-mcp
-# GitHub Actions 自动构建 proxypin-mcp-android-{ver}.apk
+# GitHub Actions 自动构建 proxypin-mcp-android-{ver}-arm64-v8a.apk
 ```
 
 工作流：`.github/workflows/release.yml`（仅 Android）。
@@ -165,7 +166,7 @@ git push origin v1.3.0-mcp
 ```bash
 flutter pub get
 flutter gen-l10n
-flutter build apk --release        # 通用 APK
+flutter build apk --release --target-platform android-arm64  # arm64-v8a APK
 # 输出：build/app/outputs/flutter-apk/app-release.apk
 ```
 

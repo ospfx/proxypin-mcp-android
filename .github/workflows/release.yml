@@ -9,7 +9,7 @@ on:
 
 jobs:
   # ─────────────────────────────────────────────────────────────
-  # Job 1: Android — APK (split-per-abi)
+  # Job 1: Android — APK (arm64-v8a)
   # ─────────────────────────────────────────────────────────────
   build-android:
     runs-on: ubuntu-latest
@@ -41,8 +41,8 @@ jobs:
       - name: Generate Localization
         run: flutter gen-l10n
 
-      - name: Build APK (release, universal)
-        run: flutter build apk --release
+      - name: Build APK (release, arm64-v8a)
+        run: flutter build apk --release --target-platform android-arm64
 
       - name: Read App Version
         id: version
@@ -57,14 +57,14 @@ jobs:
           mkdir -p dist
           apk=$(find build/app/outputs/flutter-apk -maxdepth 1 -name '*.apk' | head -1)
           echo "Built APK: $apk"
-          cp "$apk" "dist/proxypin-mcp-android-${APP_VERSION}.apk"
+          cp "$apk" "dist/proxypin-mcp-android-${APP_VERSION}-arm64-v8a.apk"
           ls -lh dist/
 
-      - name: Upload Android APKs
+      - name: Upload Android arm64-v8a APK
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk
-          path: dist/proxypin-mcp-android-*.apk
+          name: android-apk-arm64-v8a
+          path: dist/proxypin-mcp-android-*-arm64-v8a.apk
           if-no-files-found: error
 
   # ─────────────────────────────────────────────────────────────
